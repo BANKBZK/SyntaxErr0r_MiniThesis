@@ -31,6 +31,10 @@ namespace SyntaxError.Player
 
         private void Update()
         {
+            if (_controller == null || !_controller.enabled)
+            {
+                return; // ป้องกันข้อผิดพลาดถ้า CharacterController ถูกปิด
+            }
             HandleMovement();
             HandleGravity();
         }
