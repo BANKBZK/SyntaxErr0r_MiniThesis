@@ -4,29 +4,27 @@ namespace SyntaxError.Anomaly
 {
     public class AnomalyObject : MonoBehaviour
     {
-        [Header("Anomaly Setup")]
-        [Tooltip("ชื่อเอาไว้ดูใน Inspector")]
-        [SerializeField] private string _anomalyName = "Moving Chair";
-
-        [Tooltip("วัตถุตอนปกติ (เช่น เก้าอี้วางพื้น)")]
+        [Header("Setup")]
+        [SerializeField] private string _anomalyName = "Anomaly Prop";
         [SerializeField] private GameObject _normalState;
-
-        [Tooltip("วัตถุตอนหลอน (เช่น เก้าอี้ลอย)")]
         [SerializeField] private GameObject _anomalyState;
 
-        // สั่งให้เป็นผี
+        private void Start()
+        {
+            // เริ่มเกมมา สั่งรีเซ็ตตัวเองทันที (กันลืม)
+            ResetToNormal();
+        }
+
         public void ActivateAnomaly()
         {
             if (_normalState != null) _normalState.SetActive(false);
             if (_anomalyState != null) _anomalyState.SetActive(true);
-            Debug.Log($"Anomaly Activated: {_anomalyName}");
         }
 
-        // สั่งให้กลับเป็นปกติ
         public void ResetToNormal()
         {
-            if (_normalState != null) _normalState.SetActive(true);
             if (_anomalyState != null) _anomalyState.SetActive(false);
+            if (_normalState != null) _normalState.SetActive(true);
         }
     }
 }

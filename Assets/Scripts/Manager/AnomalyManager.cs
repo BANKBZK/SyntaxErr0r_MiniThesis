@@ -9,12 +9,13 @@ namespace SyntaxError.Managers
 
         [Header("Settings")]
         [Range(0, 100)]
-        [SerializeField] private int _chance = 50; // ลองปรับเป็น 100 เพื่อเทส
+        [SerializeField] private int _chance = 40;
 
-        [Tooltip("Loop ที่ห้ามมีผี")]
+        [Tooltip("Loop ที่ห้ามมีผี (เช่น Loop 0 Tutorial)")]
         [SerializeField] private List<int> _safeLoops = new List<int>() { 0 };
 
         [Header("References")]
+        [Tooltip("ลาก GameObject ใน Scene มาใส่เท่านั้น (ห้ามใส่ Prefab)")]
         [SerializeField] private List<Anomaly.AnomalyObject> _allAnomalies;
 
         public bool IsAnomalyActive { get; private set; }
@@ -25,25 +26,27 @@ namespace SyntaxError.Managers
             else Destroy(gameObject);
         }
 
+        private void Start()
+        {
+            // เริ่มเกม: บังคับ Reset ทุกตัวให้เป็น Normal ทันที
+            ForceResetAll();
+            IsAnomalyActive = false;
+        }
+
         public void ProcessLoop(int currentLoop)
         {
-            Debug.Log($"<color=yellow>[AnomalyManager] Processing Loop: {currentLoop}</color>");
-
-            // 1. Reset ของเก่าก่อน
+            // 1. ล้างสถานะเก่า
             ForceResetAll();
 
-            // 2. เช็ค Safe Loop
+            // 2. เช็ค Safe Loop (เช่น Loop 0)
             if (_safeLoops.Contains(currentLoop))
             {
-                Debug.Log($"[AnomalyManager] Loop {currentLoop} is SAFE. Skipping RNG.");
                 IsAnomalyActive = false;
-                return;
+                return; // จบงาน ไม่สุ่ม
             }
 
             // 3. สุ่ม RNG
             int roll = Random.Range(0, 100);
-            Debug.Log($"[AnomalyManager] Rolled: {roll} (Chance needs < {_chance})");
-
             if (roll < _chance)
             {
                 IsAnomalyActive = true;
@@ -52,39 +55,34 @@ namespace SyntaxError.Managers
             else
             {
                 IsAnomalyActive = false;
-                Debug.Log("[AnomalyManager] Result: Normal Loop");
             }
         }
 
         private void SpawnRandomAnomaly()
         {
-            // เช็คว่าลืมใส่ของใน List ไหม?
-            if (_allAnomalies == null || _allAnomalies.Count == 0)
-            {
-                Debug.LogError("<color=red>[AnomalyManager] Error: List is Empty! ลากของใส่ใน Inspector ด้วย!</color>");
-                return;
-            }
+            if (_allAnomalies == null || _allAnomalies.Count == 0) return;
 
+            // สุ่มเลือก 1 ตัว
             int index = Random.Range(0, _allAnomalies.Count);
             var target = _allAnomalies[index];
 
-            // --- เช็คว่าเป็น Prefab หรือไม่ (สำคัญมาก) ---
-            if (target.gameObject.scene.name == null)
+            if (target != null)
             {
-                Debug.LogError($"<color=red>[AnomalyManager] CRITICAL ERROR: '{target.name}' เป็น Prefab! คุณต้องลากของจาก Hierarchy (ในฉาก) มาใส่เท่านั้น ห้ามลากจากโฟลเดอร์!</color>");
-                return;
-            }
-            // ----------------------------------------
+                // Safety Check: กันคนลาก Prefab มาใส่ (เตือนใน Console)
+                if (target.gameObject.scene.name == null)
+                {
+                    Debug.LogError($"[AnomalyManager] Error: '{target.name}' is a Prefab! Please assign the Scene Object.");
+                    return;
+                }
 
-            Debug.Log($"<color=red>[AnomalyManager] ACTIVATING: {target.name}</color>");
-            target.ActivateAnomaly();
+                target.ActivateAnomaly();
+                Debug.Log($"Anomaly Spawned: {target.name}");
+            }
         }
 
         public void ForceResetAll()
         {
             if (_allAnomalies == null) return;
-            Debug.Log("[AnomalyManager] Resetting all objects...");
-
             foreach (var anomaly in _allAnomalies)
             {
                 if (anomaly != null) anomaly.ResetToNormal();

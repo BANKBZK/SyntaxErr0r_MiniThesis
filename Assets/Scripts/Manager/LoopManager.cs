@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using SyntaxError.Interfaces; // ต้องมี Interface IResettable
-using SyntaxError.Player;     // อ้างอิง PlayerController (ถ้ามี)
+using SyntaxError.Interfaces;
+using SyntaxError.Player;
 
 namespace SyntaxError.Managers
 {
@@ -17,146 +17,90 @@ namespace SyntaxError.Managers
         [SerializeField] private CanvasGroup _fadeUI;
 
         [Header("Settings")]
-        [SerializeField] private float _fadeDuration = 1.5f;
+        [SerializeField] private float _fadeDuration = 1.0f;
 
-        // ลิสต์เก็บของที่ต้อง Reset (ประตู, หน้าต่าง ฯลฯ)
         private List<IResettable> _resettableObjects = new List<IResettable>();
         private bool _isTeleporting = false;
 
         private void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-            }
-            else
-            {
-                Destroy(gameObject);
-                return;
-            }
+            if (Instance == null) Instance = this;
         }
 
-        // --- 1. แก้ปัญหาจอดำไม่ทำงานตอนเริ่มเกม ---
         private void Start()
         {
-            // บังคับค่าเริ่มต้นทันทีที่เริ่มเกม
+            // เริ่มเกม: บังคับจอมืด แล้วค่อยๆ สว่าง
             if (_fadeUI != null)
             {
-                _fadeUI.alpha = 1f; // จอมืดตึ๊บ
-                _fadeUI.blocksRaycasts = false; // กันไว้ก่อน
+                _fadeUI.alpha = 1f;
+                _fadeUI.blocksRaycasts = false;
+                StartCoroutine(FadeRoutine(1f, 0f));
             }
-
-            // สั่ง Fade In (สว่างขึ้น)
-            StartCoroutine(FadeRoutine(1f, 0f));
         }
 
-        // --- ระบบลงทะเบียน (Registration) ---
-        public void Register(IResettable obj)
-        {
-            if (!_resettableObjects.Contains(obj)) _resettableObjects.Add(obj);
-        }
+        public void Register(IResettable obj) { if (!_resettableObjects.Contains(obj)) _resettableObjects.Add(obj); }
+        public void Unregister(IResettable obj) { if (_resettableObjects.Contains(obj)) _resettableObjects.Remove(obj); }
 
-        public void Unregister(IResettable obj)
-        {
-            if (_resettableObjects.Contains(obj)) _resettableObjects.Remove(obj);
-        }
-
-        // --- คำสั่งจบ Loop (เรียกจาก Trigger) ---
         public void CompleteLoop()
         {
-            if (_isTeleporting) return; // ป้องกันการชนซ้ำ
-            StartCoroutine(TeleportSequence());
+            if (!_isTeleporting) StartCoroutine(TeleportSequence());
         }
 
-        // --- Sequence การวาร์ป ---
         private IEnumerator TeleportSequence()
         {
             _isTeleporting = true;
 
-            // 1. Fade Out (มืดลง)
+            // 1. Fade Out
             yield return StartCoroutine(FadeRoutine(0f, 1f));
 
-            // --- เริ่มโซน Logic (ใส่ Try-Catch กันเกมค้าง) ---
-            try
+            // 2. Logic Process (ทำตอนจอดำ)
+            if (GameManager.Instance != null) GameManager.Instance.NextLoop();
+            int loop = GameManager.Instance != null ? GameManager.Instance.CurrentLoop : 0;
+
+            // 3. Teleport Player
+            if (_characterController != null) _characterController.enabled = false;
+
+            // ใช้ Position/Rotation จาก StartPoint
+            _playerTransform.position = _startPoint.position;
+            _playerTransform.rotation = _startPoint.rotation;
+            Physics.SyncTransforms(); // สำคัญมากสำหรับการย้ายตำแหน่งทันที
+
+            // 4. Reset Objects (ประตู, หน้าต่าง)
+            foreach (var obj in _resettableObjects)
             {
-                // A. อัปเดต Loop Count
-                if (GameManager.Instance != null) GameManager.Instance.NextLoop();
-                int currentLoop = GameManager.Instance != null ? GameManager.Instance.CurrentLoop : 0;
-                Debug.Log($"--- STARTING LOOP {currentLoop} ---");
-
-                // B. ย้าย Player (ปิด Controller ชั่วคราว)
-                if (_characterController != null) _characterController.enabled = false;
-
-                if (_playerTransform != null && _startPoint != null)
-                {
-                    _playerTransform.position = _startPoint.position;
-                    _playerTransform.rotation = _startPoint.rotation;
-                    Physics.SyncTransforms(); // บังคับ Physics อัปเดตทันที (สำคัญ!)
-                }
-
-                // C. สั่ง Reset ของในฉาก (ประตู)
-                for (int i = _resettableObjects.Count - 1; i >= 0; i--)
-                {
-                    if (_resettableObjects[i] == null)
-                        _resettableObjects.RemoveAt(i);
-                    else
-                        _resettableObjects[i].OnLoopReset(currentLoop);
-                }
-
-                // D. จัดการ Anomaly (แก้ปัญหาซ้อนทับ)
-                if (AnomalyManager.Instance != null)
-                {
-                    // D1. บังคับ Reset ของเก่าทิ้งให้หมดก่อน (Double Check)
-                    // (เพิ่มฟังก์ชันนี้ใน AnomalyManager ถ้ายังไม่มี: public void ForceResetAll() )
-                    // AnomalyManager.Instance.ForceResetAll(); 
-
-                    // D2. สั่งประมวลผลรอบใหม่
-                    AnomalyManager.Instance.ProcessLoop(currentLoop);
-                }
-                else
-                {
-                    Debug.LogWarning("AnomalyManager missing! Spawning Normal Loop.");
-                }
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Error in Loop Sequence: {e.Message}\n{e.StackTrace}");
+                if (obj != null) obj.OnLoopReset(loop);
             }
 
-            // รอ 1 เฟรมให้ทุกอย่างเข้าที่
+            // 5. Manage Anomaly
+            if (AnomalyManager.Instance != null)
+            {
+                AnomalyManager.Instance.ProcessLoop(loop);
+            }
+
+            // รอ 1 เฟรมให้ Physics เข้าที่
             yield return null;
 
-            // เปิดการควบคุมคืน
             if (_characterController != null) _characterController.enabled = true;
 
-            // 2. Fade In (สว่างขึ้น)
+            // 6. Fade In
             yield return StartCoroutine(FadeRoutine(1f, 0f));
 
             _isTeleporting = false;
         }
 
-        // --- ระบบ Fade ที่เสถียรขึ้น ---
-        private IEnumerator FadeRoutine(float startAlpha, float endAlpha)
+        private IEnumerator FadeRoutine(float start, float end)
         {
-            float timer = 0f;
+            float t = 0f;
+            if (_fadeUI != null) _fadeUI.alpha = start;
 
-            // ตั้งค่าเริ่มต้นให้ชัวร์
-            if (_fadeUI != null) _fadeUI.alpha = startAlpha;
-
-            while (timer < _fadeDuration)
+            while (t < _fadeDuration)
             {
-                timer += Time.deltaTime;
-                float progress = timer / _fadeDuration;
-
-                if (_fadeUI != null)
-                {
-                    _fadeUI.alpha = Mathf.Lerp(startAlpha, endAlpha, progress);
-                }
+                t += Time.deltaTime;
+                if (_fadeUI != null) _fadeUI.alpha = Mathf.Lerp(start, end, t / _fadeDuration);
                 yield return null;
             }
 
-            // จบแล้วตั้งค่าปลายทางให้เป๊ะ
-            if (_fadeUI != null) _fadeUI.alpha = endAlpha;
+            if (_fadeUI != null) _fadeUI.alpha = end;
         }
     }
 }

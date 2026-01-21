@@ -982,6 +982,7 @@ MonoBehaviour:
   _characterController: {fileID: 659378360}
   _startPoint: {fileID: 774500494}
   _fadeUI: {fileID: 1760109485}
+  _fadeDuration: 1.5
 --- !u!114 &439270531
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1024,7 +1025,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _chance: 40
-  _storySafeLoops: 0300000006000000
+  _safeLoops: 
   _allAnomalies:
   - {fileID: 1706461705}
   - {fileID: 313196794}
