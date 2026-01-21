@@ -1,0 +1,45 @@
+﻿using UnityEngine;
+using UnityEngine.InputSystem;
+
+namespace SyntaxError.Inputs
+{
+    public class InputManager : MonoBehaviour
+    {
+        [Header("Input Action Asset")]
+        [SerializeField] private InputSystem_Actions _inputActions;
+
+        // ตัวแปรเก็บค่า Input ที่สคริปต์อื่นจะมาดึงไปใช้
+        public Vector2 MoveInput { get; private set; }
+        public Vector2 LookInput { get; private set; }
+        public bool IsSprinting { get; private set; }
+        public bool IsJumpPressed { get; private set; }
+
+        private void OnEnable()
+        {
+            if (_inputActions == null)
+            {
+                _inputActions = new InputSystem_Actions();
+            }
+
+            _inputActions.Player.Enable();
+
+            // Subscribe Events
+            _inputActions.Player.Move.performed += i => MoveInput = i.ReadValue<Vector2>();
+            _inputActions.Player.Move.canceled += i => MoveInput = Vector2.zero;
+
+            _inputActions.Player.Look.performed += i => LookInput = i.ReadValue<Vector2>();
+            _inputActions.Player.Look.canceled += i => LookInput = Vector2.zero;
+
+            _inputActions.Player.Sprint.performed += i => IsSprinting = true;
+            _inputActions.Player.Sprint.canceled += i => IsSprinting = false;
+
+            _inputActions.Player.Jump.performed += i => IsJumpPressed = true;
+            _inputActions.Player.Jump.canceled += i => IsJumpPressed = false;
+        }
+
+        private void OnDisable()
+        {
+            _inputActions.Player.Disable();
+        }
+    }
+}
