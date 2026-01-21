@@ -6,32 +6,31 @@ namespace SyntaxError.Managers
     {
         public static GameManager Instance { get; private set; }
 
-        [Header("Game State")]
-        public int CurrentLoop = 0;
+        [Header("Global State")]
+        public int CurrentLoop = 0; // เริ่มต้นที่ 0 (Tutorial)
         public bool IsPuzzleSolved = false;
 
         private void Awake()
         {
-            // Singleton Pattern
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject); // ข้าม Scene ไม่หาย (เผื่อใช้ตอน Load Ending!!!)
+            DontDestroyOnLoad(gameObject);
         }
 
-        public void IncrementLoop()
+        public void NextLoop()
         {
             CurrentLoop++;
-            Debug.Log($"Loop Count: {CurrentLoop}");
+            Debug.Log($"--- ENTERING LOOP {CurrentLoop} ---");
         }
 
-        public void ResetLoop()
+        public void ResetToZero()
         {
             CurrentLoop = 0;
-            Debug.Log("Loop Reset to 0!");
+            IsPuzzleSolved = false;
         }
     }
 }
