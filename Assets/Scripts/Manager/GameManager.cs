@@ -30,7 +30,7 @@ namespace SyntaxError.Managers
         public void ResetToZero()
         {
             CurrentLoop = 0;
-            IsPuzzleSolved = false;
+            Debug.Log("<color=red>WRONG CHOICE! Resetting to Loop 0.</color>");
         }
     }
 }
