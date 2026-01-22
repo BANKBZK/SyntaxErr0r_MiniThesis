@@ -905,7 +905,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _chance: 40
-  _safeLoops: 
+  _safeLoops: 00000000
   _allAnomalies:
   - {fileID: 1706461705}
   - {fileID: 313196794}
