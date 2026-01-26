@@ -73,3 +73,105 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+Assets/Billboard_Capture.meta
+Assets/Billboard_Capture/Doc.meta
+Assets/Billboard_Capture/Doc/Billboard_Capture_Tool.pdf
+Assets/Billboard_Capture/Doc/Billboard_Capture_Tool.pdf.meta
+Assets/Billboard_Capture/Doc/Quick_Start.txt
+Assets/Billboard_Capture/Doc/Quick_Start.txt.meta
+Assets/Billboard_Capture/Models.meta
+Assets/Billboard_Capture/Models/Imposter.meta
+Assets/Billboard_Capture/Models/Imposter/Billboard.fbx
+Assets/Billboard_Capture/Models/Imposter/Billboard.fbx.meta
+Assets/Billboard_Capture/Models/Imposter/Imposter_4X.fbx
+Assets/Billboard_Capture/Models/Imposter/Imposter_4X.fbx.meta
+Assets/Billboard_Capture/Models/Imposter/Imposter_8X.fbx
+Assets/Billboard_Capture/Models/Imposter/Imposter_8X.fbx.meta
+Assets/Billboard_Capture/Models/Imposter/Materials.meta
+Assets/Billboard_Capture/Models/Imposter/Materials/Billboard.mat
+Assets/Billboard_Capture/Models/Imposter/Materials/Billboard.mat.meta
+Assets/Billboard_Capture/Models/Imposter/Materials/Imposter.mat
+Assets/Billboard_Capture/Models/Imposter/Materials/Imposter.mat.meta
+Assets/Billboard_Capture/Models/Imposter/Materials/My Billboard.mat
+Assets/Billboard_Capture/Models/Imposter/Materials/My Billboard.mat.meta
+Assets/Billboard_Capture/Models/Imposter/Materials/My Tree_Billboard.mat
+Assets/Billboard_Capture/Models/Imposter/Materials/My Tree_Billboard.mat.meta
+Assets/Billboard_Capture/Models/Tree.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_3_Leaf.png
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_3_Leaf.png.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_3_Trunk.png
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_3_Trunk.png.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_Leaf.mat
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_Leaf.mat.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_Trunk.mat
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Materials/HP_Trunk.mat.meta
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Tree_3.fbx
+Assets/Billboard_Capture/Models/Tree/HighPoly3/Tree_3.fbx.meta
+Assets/Billboard_Capture/Prefabs.meta
+Assets/Billboard_Capture/Prefabs/Imposter.meta
+Assets/Billboard_Capture/Prefabs/Imposter/Billboard.prefab
+Assets/Billboard_Capture/Prefabs/Imposter/Billboard.prefab.meta
+Assets/Billboard_Capture/Prefabs/Imposter/Imposter_4X.prefab
+Assets/Billboard_Capture/Prefabs/Imposter/Imposter_4X.prefab.meta
+Assets/Billboard_Capture/Prefabs/Imposter/Imposter_8X.prefab
+Assets/Billboard_Capture/Prefabs/Imposter/Imposter_8X.prefab.meta
+Assets/Billboard_Capture/Prefabs/Sample Tree.meta
+Assets/Billboard_Capture/Prefabs/Sample Tree/Tree_3.prefab
+Assets/Billboard_Capture/Prefabs/Sample Tree/Tree_3.prefab.meta
+Assets/Billboard_Capture/Scene.meta
+Assets/Billboard_Capture/Scene/Billboard_Test.unity
+Assets/Billboard_Capture/Scene/Billboard_Test.unity.meta
+Assets/Billboard_Capture/Scene/Billboard_Test_Profiles.meta
+Assets/Billboard_Capture/Scene/Billboard_Test_Profiles/Volume Profile.asset
+Assets/Billboard_Capture/Scene/Billboard_Test_Profiles/Volume Profile.asset.meta
+Assets/Billboard_Capture/Scripts.meta
+Assets/Billboard_Capture/Scripts/BillboardCaptureTool.cs
+Assets/Billboard_Capture/Scripts/BillboardCaptureTool.cs.meta
+Assets/Billboard_Capture/Shaders.meta
+Assets/Billboard_Capture/Shaders/Built_in RP.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Cylindrical.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Cylindrical.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Cylindrical_Translucency.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Cylindrical_Translucency.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Spherical.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Spherical.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Spherical_Translucency.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Billboard_Spherical_Translucency.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_Diffuse.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_Diffuse.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_Diffuse_Translucency.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_Diffuse_Translucency.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_NormalMap.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_NormalMap.shader.meta
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_NormalMap_Translucency.shader
+Assets/Billboard_Capture/Shaders/Built_in RP/Imposter_NormalMap_Translucency.shader.meta
+Assets/Billboard_Capture/Shaders/URP.meta
+Assets/Billboard_Capture/Shaders/URP/Notes.txt
+Assets/Billboard_Capture/Shaders/URP/Notes.txt.meta
+Assets/Billboard_Capture/Shaders/URP/URP_2022_3.zip
+Assets/Billboard_Capture/Shaders/URP/URP_2022_3.zip.meta
+Assets/Billboard_Capture/Shaders/URP/URP_Unity_6.zip
+Assets/Billboard_Capture/Shaders/URP/URP_Unity_6.zip.meta
+Assets/Billboard_Capture/Textures.meta
+Assets/Billboard_Capture/Textures/Billboards.meta
+Assets/Billboard_Capture/Textures/Billboards/Billboard_Tree_filled.tif
+Assets/Billboard_Capture/Textures/Billboards/Billboard_Tree_filled.tif.meta
+Assets/Billboard_Capture/Textures/Sky.meta
+Assets/Billboard_Capture/Textures/Sky/Floor.mat
+Assets/Billboard_Capture/Textures/Sky/Floor.mat.meta
+Assets/Billboard_Capture/Textures/Sky/HDRI_Sky.mat
+Assets/Billboard_Capture/Textures/Sky/HDRI_Sky.mat.meta
+Assets/Billboard_Capture/Textures/Sky/HDRI_Test.png
+Assets/Billboard_Capture/Textures/Sky/HDRI_Test.png.meta
+Assets/Billboard_Capture/Textures/Utility.meta
+Assets/Billboard_Capture/Textures/Utility/Grid.png
+Assets/Billboard_Capture/Textures/Utility/Grid.png.meta
+Assets/Billboard_Capture/Textures/Utility/Grid1.png
+Assets/Billboard_Capture/Textures/Utility/Grid1.png.meta
+Assets/Billboard_Capture/Textures/Utility/Grid2.png
+Assets/Billboard_Capture/Textures/Utility/Grid2.png.meta
+Assets/Billboard_Capture/Textures/Utility/Grid3.png
+Assets/Billboard_Capture/Textures/Utility/Grid3.png.meta
+ProjectSettings/URPProjectSettings.asset
