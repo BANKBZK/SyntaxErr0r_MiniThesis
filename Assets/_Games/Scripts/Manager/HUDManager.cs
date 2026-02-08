@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // ต้องการ TextMeshPro
+using TMPro;
 
 namespace SyntaxError.Managers
 {
