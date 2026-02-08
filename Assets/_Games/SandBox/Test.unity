@@ -1983,11 +1983,6 @@ Transform:
   - {fileID: 274977080}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1751633658 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8592024121406582996, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-  m_PrefabInstance: {fileID: 8595275358215247431}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1760109483
 GameObject:
   m_ObjectHideFlags: 0
@@ -2242,22 +2237,6 @@ PrefabInstance:
       propertyPath: _promptText
       value: 
       objectReference: {fileID: 307093934}
-    - target: {fileID: 7751739522309803966, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: _controller
-      value: 
-      objectReference: {fileID: 659378360}
-    - target: {fileID: 7751739522309803966, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: _cameraHolder
-      value: 
-      objectReference: {fileID: 1751633658}
-    - target: {fileID: 7751739522309803966, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: '_footstepSounds.Array.data[0]'
-      value: Step1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7751739522309803966, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: '_footstepSounds.Array.data[1]'
-      value: Step2
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
