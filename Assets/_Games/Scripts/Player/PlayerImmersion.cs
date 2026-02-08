@@ -103,7 +103,7 @@ namespace SyntaxError.Player
         {
             if (Mathf.Abs(_cameraHolder.localPosition.y - _defaultYPos) > 0.001f)
             {
-                _timer = 0; // Reset timer เพื่อให้เริ่มก้าวใหม่สวยๆ
+                _timer = 0; // Reset timer เพื่อให้เริ่มก้าวใหม่
                 Vector3 targetPos = new Vector3(_cameraHolder.localPosition.x, _defaultYPos, _cameraHolder.localPosition.z);
                 _cameraHolder.localPosition = Vector3.Lerp(_cameraHolder.localPosition, targetPos, Time.deltaTime * 5f);
             }
