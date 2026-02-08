@@ -805,6 +805,7 @@ GameObject:
   - component: {fileID: 6726691244693011040}
   - component: {fileID: 554662190227307874}
   - component: {fileID: 5697490404761585134}
+  - component: {fileID: 7751739522309803966}
   m_Layer: 0
   m_Name: PF_Player
   m_TagString: Player
@@ -907,6 +908,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42418f9002bd03346834c41d9109ce01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &7751739522309803966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2975702002553894690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e1ec932bb2160b48b6851f5ac8a62b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _controller: {fileID: 7681053551605527124}
+  _cameraHolder: {fileID: 8592024121406582996}
+  _enableHeadBob: 1
+  _bobFrequency: 14
+  _bobAmplitude: 0.05
+  _sprintMultiplier: 1.5
+  _enableFootsteps: 1
+  _footstepSounds:
+  - Step1
+  - Step2
 --- !u!1 &3013686224217720933
 GameObject:
   m_ObjectHideFlags: 0
