@@ -10,10 +10,10 @@ namespace SyntaxError.Managers
 
         [Header("UI References")]
         [SerializeField] private Image _crosshair; // จุดกลางจอ
-        [SerializeField] private TextMeshProUGUI _loopText; // ตัวเลขบอก Loop
-        [SerializeField] private GameObject _winScreen; // หน้าจอชนะ
+        [SerializeField] private TextMeshProUGUI _loopText; // ตัวเลขบอก Loop
+        [SerializeField] private GameObject _winScreen; // หน้าจอชนะ
 
-        private void Awake()
+        private void Awake()
         {
             if (Instance == null) Instance = this;
         }
@@ -23,8 +23,8 @@ namespace SyntaxError.Managers
             UpdateLoopDisplay(0);
             if (_winScreen != null) _winScreen.SetActive(false);
 
-            // ซ่อนเมาส์
-            Cursor.lockState = CursorLockMode.Locked;
+            // ซ่อนเมาส์
+            Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
 
@@ -37,12 +37,12 @@ namespace SyntaxError.Managers
         {
             if (_winScreen != null) _winScreen.SetActive(true);
 
-            // ปลดล็อกเมาส์
-            Cursor.lockState = CursorLockMode.None;
+            // ปลดล็อกเมาส์
+            Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // หยุดการควบคุมผู้เล่น
-            // Player.GetComponent<PlayerController>().enabled = false;
-        }
+            // หยุดการควบคุมผู้เล่น
+            // Player.GetComponent<PlayerController>().enabled = false;
+        }
     }
 }
