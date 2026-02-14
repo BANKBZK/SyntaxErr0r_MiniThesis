@@ -15,6 +15,7 @@ namespace SyntaxError.Inputs
         public bool IsJumpPressed { get; private set; }
         public bool IsInteractPressed { get; private set; }
 
+        public bool IsFlashlightPressed { get; private set; }
 
         private void OnEnable()
         {
@@ -45,8 +46,16 @@ namespace SyntaxError.Inputs
             // Interact (กดปุ่ม E)
             _inputActions.Player.Interact.performed += i => IsInteractPressed = true;
             _inputActions.Player.Interact.canceled += i => IsInteractPressed = false;
+
+            // Flashlight Toggle (กดปุ่ม F)
+            _inputActions.Player.Flashlight.performed += i => IsFlashlightPressed = true;
+            _inputActions.Player.Flashlight.canceled += i => IsFlashlightPressed = false;
         }
 
+        public void ConsumeFlashlightInput()
+        {
+            IsFlashlightPressed = false;
+        }
         private void OnDisable()
         {
             _inputActions.Player.Disable();
