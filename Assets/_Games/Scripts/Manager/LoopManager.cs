@@ -26,6 +26,7 @@ namespace SyntaxError.Managers
 
         private List<IResettable> _resettableObjects = new List<IResettable>();
         private bool _isTeleporting = false;
+        public bool IsTeleporting => _isTeleporting;
 
         private void Awake() { if (Instance == null) Instance = this; }
 

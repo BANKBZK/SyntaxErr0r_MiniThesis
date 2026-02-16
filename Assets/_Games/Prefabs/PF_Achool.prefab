@@ -62,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: a3cd193c31b56084da05d78cbbd54b94, type: 3}
       propertyPath: m_Name
-      value: Achool
+      value: PF_Achool
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

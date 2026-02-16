@@ -36,12 +36,12 @@ namespace SyntaxError.Inputs
             _inputActions.Player.Look.canceled += i => LookInput = Vector2.zero;
 
             // Sprint
-            _inputActions.Player.Sprint.performed += i => IsSprinting = true;
-            _inputActions.Player.Sprint.canceled += i => IsSprinting = false;
+            //_inputActions.Player.Sprint.performed += i => IsSprinting = true;
+            //_inputActions.Player.Sprint.canceled += i => IsSprinting = false;
 
             // Jump
-            _inputActions.Player.Jump.performed += i => IsJumpPressed = true;
-            _inputActions.Player.Jump.canceled += i => IsJumpPressed = false;
+            //_inputActions.Player.Jump.performed += i => IsJumpPressed = true;
+            //_inputActions.Player.Jump.canceled += i => IsJumpPressed = false;
 
             // Interact (กดปุ่ม E)
             _inputActions.Player.Interact.performed += i => IsInteractPressed = true;

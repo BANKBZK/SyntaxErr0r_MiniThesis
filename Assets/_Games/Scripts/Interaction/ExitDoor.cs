@@ -26,10 +26,17 @@ namespace SyntaxError.Interaction
 
         public void Interact()
         {
-            if (_isClicked) return;
+            // 1. เช็คความปลอดภัย: ถ้า LoopManager กำลังทำงานอยู่ ห้ามยุ่งเด็ดขาด!
+            if (LoopManager.Instance != null && LoopManager.Instance.IsTeleporting)
+            {
+                Debug.LogWarning("LoopManager is busy teleporting. Interaction Ignored.");
+                return;
+            }
+
+            if (_isClicked) return; // กันกดซ้ำในตัวมันเอง
             _isClicked = true;
 
-            // สั่งเล่นเสียงเปิดประตู
+            // เล่นเสียง
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("DoorOpen");
 
             StartCoroutine(OpenAndSubmit());
@@ -37,11 +44,16 @@ namespace SyntaxError.Interaction
 
         public string GetPromptText()
         {
+            // ถ้ากดไปแล้ว หรือระบบกำลังวาร์ป ไม่ต้องขึ้นข้อความ
+            if (_isClicked || (LoopManager.Instance != null && LoopManager.Instance.IsTeleporting))
+                return "";
+
             return _isAnomalyExit ? "Report Anomaly" : "Proceed (Normal)";
         }
 
         private IEnumerator OpenAndSubmit()
         {
+            // Animation ประตูเปิด
             if (_doorModel != null)
             {
                 Vector3 startPos = _doorModel.localPosition;
@@ -55,14 +67,22 @@ namespace SyntaxError.Interaction
                 }
             }
 
-            // ส่งคำตอบ
-            if (LoopManager.Instance != null) LoopManager.Instance.SubmitVote(_isAnomalyExit);
+            // ส่งคำตอบให้ LoopManager
+            if (LoopManager.Instance != null)
+            {
+                LoopManager.Instance.SubmitVote(_isAnomalyExit);
+            }
+            else
+            {
+                // Safety: ถ้าหา LoopManager ไม่เจอ ให้ปลดล็อกเพื่อให้ลองกดใหม่ได้
+                _isClicked = false;
+                Debug.LogError("Critical Error: LoopManager not found!");
+            }
         }
 
         public void ResetDoor()
         {
             _isClicked = false;
-            // ประตูจะถูกย้ายกลับที่โดยอัตโนมัติตอน Scene Reset หรือถ้าจะให้ชัวร์ก็สั่งตรงนี้ได้
             if (_doorModel != null) _doorModel.localPosition = _initialPos;
         }
     }
