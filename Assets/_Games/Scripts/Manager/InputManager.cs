@@ -36,8 +36,8 @@ namespace SyntaxError.Inputs
             _inputActions.Player.Look.canceled += i => LookInput = Vector2.zero;
 
             // Sprint
-            //_inputActions.Player.Sprint.performed += i => IsSprinting = true;
-            //_inputActions.Player.Sprint.canceled += i => IsSprinting = false;
+            _inputActions.Player.Sprint.performed += i => IsSprinting = true;
+            _inputActions.Player.Sprint.canceled += i => IsSprinting = false;
 
             // Jump
             //_inputActions.Player.Jump.performed += i => IsJumpPressed = true;
