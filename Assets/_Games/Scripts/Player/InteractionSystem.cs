@@ -17,7 +17,11 @@ namespace SyntaxError.Player
 
         private InputManager _inputManager;
         private IInteractable _currentInteractable;
-        private bool _hasInteractedThisFrame; // ตัวกันกดรัว
+
+        // ป้องกันการกดค้าง
+        private bool _hasInteractedThisFrame;
+        private float _spamCooldown = 0f;
+
 
         private void Awake()
         {
@@ -26,55 +30,52 @@ namespace SyntaxError.Player
 
         private void Update()
         {
+            if (_spamCooldown > 0)
+            {
+                _spamCooldown -= Time.deltaTime;
+            }
             CheckForInteractable();
             HandleInput();
         }
 
-        // 1. ยิง Raycast ตรวจสอบของตรงหน้า
         private void CheckForInteractable()
         {
             Ray ray = new Ray(_cameraTransform.position, _cameraTransform.forward);
             RaycastHit hit;
-            // ยิง Ray ไปข้างหน้า
+
             if (Physics.Raycast(ray, out hit, _rayDistance, _interactableLayer))
             {
-                // ลองดึง Component IInteractable ออกมา
                 IInteractable interactable = hit.collider.GetComponent<IInteractable>();
 
                 if (interactable != null)
                 {
                     _currentInteractable = interactable;
 
-                    // อัปเดต UI ข้อความ
                     if (_promptText != null)
                     {
                         _promptText.text = $"[E] {interactable.GetPromptText()}";
                         _promptText.gameObject.SetActive(true);
                     }
-                    return; // เจอของแล้ว จบฟังก์ชันเลย
+                    return;
                 }
             }
 
-            // ถ้าไม่เจออะไรเลย หรือเจอของที่ Interact ไม่ได้
             _currentInteractable = null;
             if (_promptText != null) _promptText.gameObject.SetActive(false);
         }
-
-        // 2. รับปุ่มกด
         private void HandleInput()
         {
             if (_inputManager.IsInteractPressed)
             {
-                // ถ้ากดปุ่ม และมีของอยู่ตรงหน้า และยังไม่ได้กดค้างไว้
-                if (_currentInteractable != null && !_hasInteractedThisFrame)
+                if (_currentInteractable != null && !_hasInteractedThisFrame && _spamCooldown <= 0)
                 {
                     _currentInteractable.Interact();
-                    _hasInteractedThisFrame = true; // ล็อกไว้ไม่ให้กดรัว
+                    _hasInteractedThisFrame = true; // ล็อกกดค้าง
+                    _spamCooldown = 0.5f;
                 }
             }
             else
             {
-                // ปล่อยปุ่มแล้ว รีเซ็ตตัวล็อก
                 _hasInteractedThisFrame = false;
             }
         }
