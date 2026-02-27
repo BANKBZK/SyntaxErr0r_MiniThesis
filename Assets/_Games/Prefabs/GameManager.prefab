@@ -84,6 +84,7 @@ MonoBehaviour:
   _allAnomalies:
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
 --- !u!114 &2975407796540419083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110,20 +111,20 @@ MonoBehaviour:
     loop: 0
     source: {fileID: 0}
   - name: DoorOpen
-    clip: {fileID: 8300000, guid: 4be54fd15ea38474783a3cce7d5d71b6, type: 3}
-    volume: 1
-    pitch: 1
+    clip: {fileID: 8300000, guid: 24754698eca3bb04ab102b811133a30f, type: 3}
+    volume: 0.7
+    pitch: 1.05
     loop: 0
     source: {fileID: 0}
   - name: Step1
-    clip: {fileID: 8300000, guid: 1451f4669808a324b948891719b40e13, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: 0555b15592761ae47b9ef0aebb52582e, type: 3}
+    volume: 0.3
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: Step2
-    clip: {fileID: 8300000, guid: 598cf8ac2a95f1448bcd9f4cc8074ea5, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: 31dddff4b733e4f46a9d61273a43b8bf, type: 3}
+    volume: 0.3
     pitch: 1
     loop: 0
     source: {fileID: 0}

@@ -94,7 +94,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 112000000, guid: 46ccc2c0422bad242bbf4e4843981634, type: 2}
-  m_LightingSettings: {fileID: 0}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 2f07fc979d4bfc14c99091ebae4eb18e, type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -12711,10 +12711,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: UI
       objectReference: {fileID: 0}
-    - target: {fileID: 8136712971332410164, guid: fb95f156c25dd5b45a1bc2afdeda42c7, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -15963,18 +15959,6 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1388815034223945503, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: _chance
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: 1388815034223945503, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: _safeLoops.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1388815034223945503, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: _allAnomalies.Array.size
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 1388815034223945503, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
       propertyPath: '_allAnomalies.Array.data[0]'
       value: 
       objectReference: {fileID: 2001974947}
@@ -15986,70 +15970,6 @@ PrefabInstance:
       propertyPath: '_allAnomalies.Array.data[2]'
       value: 
       objectReference: {fileID: 222478677}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.size
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[2].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 24754698eca3bb04ab102b811133a30f, type: 3}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[3].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 0555b15592761ae47b9ef0aebb52582e, type: 3}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[4].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 31dddff4b733e4f46a9d61273a43b8bf, type: 3}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[5].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[5].name
-      value: Click
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[6].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[6].name
-      value: Click
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[2].pitch
-      value: 1.05
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[3].pitch
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[4].pitch
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[6].pitch
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[2].volume
-      value: 0.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[3].volume
-      value: 0.3
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[4].volume
-      value: 0.3
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
-      propertyPath: sounds.Array.data[6].volume
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 4393276515357542867, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
       propertyPath: _fadeUI
       value: 
@@ -20409,46 +20329,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 4505899522516357383, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_Intensity
-      value: 15
-      objectReference: {fileID: 0}
-    - target: {fileID: 4505899522516357383, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_SpotAngle
-      value: 56.378952
-      objectReference: {fileID: 0}
-    - target: {fileID: 4834815104974301948, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_ClearFlags
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4834815104974301948, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_BackGroundColor.b
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4834815104974301948, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_BackGroundColor.g
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4834815104974301948, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_BackGroundColor.r
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6726691244693011040, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
       propertyPath: _promptText
       value: 
       objectReference: {fileID: 663266543}
-    - target: {fileID: 7751739522309803966, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: _footstepSounds.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7751739522309803966, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: '_footstepSounds.Array.data[2]'
-      value: Step3
-      objectReference: {fileID: 0}
-    - target: {fileID: 8309579237430534806, guid: d402b76b45c687d4ca2d1091ba8c58c5, type: 3}
-      propertyPath: m_RenderPostProcessing
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -43494,22 +43378,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1198306682531740181, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.060899056
-      objectReference: {fileID: 0}
-    - target: {fileID: 1198306682531740181, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.06238405
-      objectReference: {fileID: 0}
-    - target: {fileID: 1198306682531740181, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.0004
-      objectReference: {fileID: 0}
-    - target: {fileID: 1198306682531740181, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0365
-      objectReference: {fileID: 0}
     - target: {fileID: 1337582764429166771, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
       propertyPath: m_Name
       value: DoorNormal
@@ -43553,38 +43421,6 @@ PrefabInstance:
     - target: {fileID: 1863325602565329417, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5327872906935545863, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1.3400333
-      objectReference: {fileID: 0}
-    - target: {fileID: 5327872906935545863, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1.2613548
-      objectReference: {fileID: 0}
-    - target: {fileID: 5327872906935545863, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.01452
-      objectReference: {fileID: 0}
-    - target: {fileID: 5327872906935545863, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0345
-      objectReference: {fileID: 0}
-    - target: {fileID: 7342698299684898157, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1.3400333
-      objectReference: {fileID: 0}
-    - target: {fileID: 7342698299684898157, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1.2613548
-      objectReference: {fileID: 0}
-    - target: {fileID: 7342698299684898157, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.016311
-      objectReference: {fileID: 0}
-    - target: {fileID: 7342698299684898157, guid: f9637fdb7c9552f41ae20ab87e2ed032, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0345
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
