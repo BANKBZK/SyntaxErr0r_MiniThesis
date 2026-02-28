@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3152569501562527011}
   - component: {fileID: 1498053127903775155}
   m_Layer: 3
-  m_Name: DoorNormal_InteractPoint
+  m_Name: DoorAnomaly_InteractPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -121,7 +121,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 691ec423e9593fb4ba316c3b4aff1960, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isAnomalyExit: 0
+  _isAnomalyExit: 1
   _doorModel: {fileID: 5327872906935545863}
   _openOffset: {x: -0.0181, y: 0, z: 0}
   _animationSpeed: 2
@@ -191,19 +191,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -2909028971555109403, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.3400333
+      value: 1.6300769
       objectReference: {fileID: 0}
     - target: {fileID: -2909028971555109403, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2613548
+      value: 1.2999521
       objectReference: {fileID: 0}
     - target: {fileID: -2909028971555109403, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.01452
+      value: 0.0131
       objectReference: {fileID: 0}
     - target: {fileID: -2909028971555109403, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0345
+      value: 0.0359
       objectReference: {fileID: 0}
     - target: {fileID: -1724777489154702073, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_Name
@@ -215,19 +215,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8914845283169611919, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.3400333
+      value: 1.6300769
       objectReference: {fileID: 0}
     - target: {fileID: 8914845283169611919, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2613548
+      value: 1.2999521
       objectReference: {fileID: 0}
     - target: {fileID: 8914845283169611919, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.016311
+      value: -0.017730996
       objectReference: {fileID: 0}
     - target: {fileID: 8914845283169611919, guid: 4c088754a2559de4ebf741f35d6c7953, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0345
+      value: 0.0359
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
