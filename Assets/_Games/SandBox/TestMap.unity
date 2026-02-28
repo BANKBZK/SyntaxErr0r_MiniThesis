@@ -32390,6 +32390,10 @@ PrefabInstance:
       propertyPath: '_allAnomalies.Array.data[2]'
       value: 
       objectReference: {fileID: 222478677}
+    - target: {fileID: 2975407796540419083, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
+      propertyPath: sounds.Array.data[5].volume
+      value: 0.6
+      objectReference: {fileID: 0}
     - target: {fileID: 4393276515357542867, guid: 4584026b0d1315f478a86d0653269d9f, type: 3}
       propertyPath: _fadeUI
       value: 
