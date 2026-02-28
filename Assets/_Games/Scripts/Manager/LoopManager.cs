@@ -34,8 +34,6 @@ namespace SyntaxError.Managers
         {
             if (_fadeUI != null) { _fadeUI.alpha = 1f; _fadeUI.blocksRaycasts = false; StartCoroutine(FadeRoutine(1f, 0f)); }
 
-            // (Optional) เล่นเสียงบรรยากาศตอนเริ่มเกม
-            // if (SoundManager.Instance != null) SoundManager.Instance.PlayMusic("Ambience");
         }
 
         public void Register(IResettable obj) { if (!_resettableObjects.Contains(obj)) _resettableObjects.Add(obj); }

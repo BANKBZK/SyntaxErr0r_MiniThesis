@@ -18,12 +18,12 @@ namespace SyntaxError.Player
 
         private float _xRotation = 0f;
 
-        private void Start()
-        {
-            // ล็อกเมาส์ให้อยู่กลางจอ
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        //private void Start()
+        //{
+        //    // ล็อกเมาส์ให้อยู่กลางจอ
+        //    Cursor.lockState = CursorLockMode.Locked;
+        //    Cursor.visible = false;
+        //}
 
         private void Update()
         {

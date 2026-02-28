@@ -17,6 +17,7 @@ namespace SyntaxError.Inputs
 
         public bool IsFlashlightPressed { get; private set; }
 
+
         private void OnEnable()
         {
             if (_inputActions == null)
@@ -50,6 +51,7 @@ namespace SyntaxError.Inputs
             // Flashlight Toggle (กดปุ่ม F)
             _inputActions.Player.Flashlight.performed += i => IsFlashlightPressed = true;
             _inputActions.Player.Flashlight.canceled += i => IsFlashlightPressed = false;
+ 
         }
 
         public void ConsumeFlashlightInput()

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4393276515357542867}
   - component: {fileID: 1388815034223945503}
   - component: {fileID: 2975407796540419083}
-  - component: {fileID: 4700105558889261522}
+  - component: {fileID: 1010481440243996040}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -130,11 +130,17 @@ MonoBehaviour:
     source: {fileID: 0}
   - name: Click
     clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
-    volume: 1
+    volume: 0.6
     pitch: 1
     loop: 0
     source: {fileID: 0}
---- !u!114 &4700105558889261522
+  - name: ButtonPress
+    clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
+    volume: 0.6
+    pitch: 1.53
+    loop: 0
+    source: {fileID: 0}
+--- !u!114 &1010481440243996040
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,9 +149,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 8388515180496024119}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9951d9854c2e3174cb048948b04e15f8, type: 3}
+  m_Script: {fileID: 11500000, guid: 3a064b18bf371ea4ea7c015188d6254b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _crosshair: {fileID: 0}
-  _loopText: {fileID: 0}
-  _winScreen: {fileID: 0}
+  _playerInput: {fileID: 0}
+  mainMenuUI: {fileID: 0}
+  optionUI: {fileID: 0}
+  creditUI: {fileID: 0}
+  hudUI: {fileID: 0}
+  pauseUI: {fileID: 0}
+  loopText: {fileID: 0}
+  fadeUI: {fileID: 0}
+  fadeDuration: 0

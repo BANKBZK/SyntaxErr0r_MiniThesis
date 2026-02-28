@@ -24,14 +24,14 @@ namespace SyntaxError.Managers
         public void NextLoop()
         {
             CurrentLoop++;
-            if (HUDManager.Instance != null) HUDManager.Instance.UpdateLoopDisplay(CurrentLoop);
+            if (UIManager.Instance != null) UIManager.Instance.UpdateLoopDisplay(CurrentLoop);
             Debug.Log($"--- ENTERING LOOP {CurrentLoop} ---");
         }
 
         public void ResetToZero()
         {
             CurrentLoop = 0;
-            if (HUDManager.Instance != null) HUDManager.Instance.UpdateLoopDisplay(0);
+            if (UIManager.Instance != null) UIManager.Instance.UpdateLoopDisplay(0);
             Debug.Log("<color=red>WRONG CHOICE! Resetting to Loop 0.</color>");
         }
     }
