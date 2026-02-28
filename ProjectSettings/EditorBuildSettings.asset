@@ -9,8 +9,8 @@ EditorBuildSettings:
     path: Assets/_Games/Scenes/Scene0_MainMenu.unity
     guid: a09119902baefe7498161f60a7d17e0d
   - enabled: 1
-    path: Assets/_Games/SandBox/TestMap.unity
-    guid: e6c12aa230d88d74096a669bcf030a8c
+    path: Assets/_Games/Scenes/Scene1_MainGame.unity
+    guid: f71246905981fbf45845a7b3bb435617
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
