@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
 using SyntaxError.Inputs; // เรียกใช้ InputManager ของผู้เล่น
@@ -92,7 +93,7 @@ namespace SyntaxError.Managers
         private IEnumerator StartGameSequence()
         {
             _isTransitioning = true;
-            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("ButtonPress");
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
             // 2. เฟดจอดำ
             if (fadeUI != null)
             {
@@ -129,7 +130,7 @@ namespace SyntaxError.Managers
                     if (creditUI != null) creditUI.SetActive(false);
                     mainMenuUI.SetActive(true);
 
-                    if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("Click");
+                    if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UICancelPress");
                 }
             }
             // กรณี 2: เล่นเกมอยู่ ให้สลับ Pause / Resume
@@ -160,11 +161,24 @@ namespace SyntaxError.Managers
             SetCursorState(false);
         }
 
+        public void OnOpenOption()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            if (optionUI != null) optionUI.SetActive(true);
+        }
+        public void OnCreditOpen()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            if (creditUI != null) creditUI.SetActive(true);
+        }
+
         public void OnExitGame()
         {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
             Application.Quit();
             Debug.Log("Game Exited");
         }
+        
         private void SetCursorState(bool visible)
         {
             Cursor.visible = visible;

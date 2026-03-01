@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentLoop: 0
-  IsPuzzleSolved: 0
+  IsPuzzleSolved: 1
 --- !u!114 &4393276515357542867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,7 +66,7 @@ MonoBehaviour:
   _characterController: {fileID: 0}
   _startPoint: {fileID: 0}
   _fadeUI: {fileID: 0}
-  _fadeDuration: 1.5
+  _fadeDuration: 1
 --- !u!114 &1388815034223945503
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -79,7 +79,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 40
+  _chance: 60
   _safeLoops: 00000000
   _allAnomalies:
   - {fileID: 0}
@@ -134,10 +134,16 @@ MonoBehaviour:
     pitch: 1
     loop: 0
     source: {fileID: 0}
-  - name: ButtonPress
+  - name: UIPress
     clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
     volume: 0.6
     pitch: 1.53
+    loop: 0
+    source: {fileID: 0}
+  - name: UICancelPress
+    clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
+    volume: 0.6
+    pitch: 0.78
     loop: 0
     source: {fileID: 0}
 --- !u!114 &1010481440243996040
