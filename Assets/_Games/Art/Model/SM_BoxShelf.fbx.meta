@@ -3,7 +3,17 @@ guid: 9b1ba800ea4a0eb46a93609a6db4758b
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rail_diffuseOriginal
+    second: {fileID: -761523782257380287, guid: e19b8f5ed495e324c8017eb58bbe1350, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shelf_diffuseOriginal
+    second: {fileID: 2100000, guid: 835ff19e0c486ca4ab9d0299c431511c, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

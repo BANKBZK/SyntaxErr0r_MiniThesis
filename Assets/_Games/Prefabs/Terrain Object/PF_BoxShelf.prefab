@@ -62,10 +62,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 9b1ba800ea4a0eb46a93609a6db4758b, type: 3}
       propertyPath: m_Name
-      value: BoxShelf
+      value: PF_BoxShelf
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: -5565131188563554716, guid: 9b1ba800ea4a0eb46a93609a6db4758b, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b1ba800ea4a0eb46a93609a6db4758b, type: 3}
