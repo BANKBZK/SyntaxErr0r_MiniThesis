@@ -181,6 +181,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -5754084199372789682, guid: 792f0d3e4c596224eb7e31b6c57a6a9b, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 1996463467714055629, guid: 38a31c8a7da127746997bfb74c5a8901, type: 3}
     - target: {fileID: 919132149155446097, guid: 792f0d3e4c596224eb7e31b6c57a6a9b, type: 3}
       propertyPath: m_Name
       value: PF_NeonLight
