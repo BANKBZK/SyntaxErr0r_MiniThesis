@@ -79,9 +79,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 50
+  _chance: 80
   _safeLoops: 00000000
   _allAnomalies:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -168,3 +171,5 @@ MonoBehaviour:
   loopText: {fileID: 0}
   fadeUI: {fileID: 0}
   fadeDuration: 0
+  storyText: {fileID: 0}
+  storyFadeSpeed: 1.5

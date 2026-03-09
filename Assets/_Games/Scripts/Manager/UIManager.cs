@@ -34,12 +34,21 @@ namespace SyntaxError.Managers
         private bool _isPaused = false;
         private bool _isTransitioning = false; // กันคนกดปุ่มรัวๆ ตอนกำลังจอดำ
 
+        [Header("Story UI")]
+        public TextMeshProUGUI storyText; // ลาก Text UI สำหรับเนื้อเรื่องมาใส่
+        public float storyFadeSpeed = 1.5f; // ความเร็วในการเฟดข้อความ
         private void Awake()
         {
             if (Instance == null) Instance = this;
             _inputActions = new InputSystem_Actions();
         }
 
+        public void ShowStoryText(string text, float duration)
+        {
+            // หยุด Coroutine เก่า (ถ้ามีข้อความอื่นเล่นอยู่) เพื่อเริ่มอันใหม่
+            StopAllCoroutines();
+            StartCoroutine(StoryTextRoutine(text, duration));
+        }
         private void OnEnable()
         {
             _inputActions.UI.Enable();
@@ -57,8 +66,6 @@ namespace SyntaxError.Managers
             ShowMainMenu();
             UpdateLoopDisplay(0);
         }
-
-
         private void ShowMainMenu()
         {
             _isGameStarted = false;
@@ -89,7 +96,43 @@ namespace SyntaxError.Managers
             if (_isTransitioning || _isGameStarted) return;
             StartCoroutine(StartGameSequence());
         }
+        private IEnumerator StoryTextRoutine(string text, float duration)
+        {
+            if (storyText == null) yield break;
 
+            storyText.text = text;
+            storyText.gameObject.SetActive(true);
+
+            // ดึงสีปัจจุบันมา เพื่อแก้แค่ค่า Alpha (ความโปร่งใส)
+            Color color = storyText.color;
+            color.a = 0f;
+            storyText.color = color;
+
+            // 1. Fade In (ค่อยๆ สว่าง)
+            float t = 0;
+            while (t < 1f)
+            {
+                t += Time.deltaTime * storyFadeSpeed;
+                color.a = t;
+                storyText.color = color;
+                yield return null;
+            }
+
+            // 2. Wait (ค้างข้อความไว้ให้คนอ่านจบ)
+            yield return new WaitForSeconds(duration);
+
+            // 3. Fade Out (ค่อยๆ จางหายไป)
+            t = 1f;
+            while (t > 0f)
+            {
+                t -= Time.deltaTime * storyFadeSpeed;
+                color.a = t;
+                storyText.color = color;
+                yield return null;
+            }
+
+            storyText.gameObject.SetActive(false);
+        }
         private IEnumerator StartGameSequence()
         {
             _isTransitioning = true;
