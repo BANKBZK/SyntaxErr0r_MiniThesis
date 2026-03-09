@@ -5,9 +5,9 @@ namespace SyntaxError.Anomaly
     public class AnomalyObject : MonoBehaviour
     {
         [Header("Setup")]
-        [SerializeField] private string _anomalyName = "Anomaly Prop";
-        [SerializeField] private GameObject _normalState;
-        [SerializeField] private GameObject _anomalyState;
+        [SerializeField] protected string _anomalyName = "Anomaly Prop";
+        [SerializeField] protected GameObject _normalState;
+        [SerializeField] protected GameObject _anomalyState;
 
         private void Start()
         {
@@ -15,13 +15,13 @@ namespace SyntaxError.Anomaly
             ResetToNormal();
         }
 
-        public void ActivateAnomaly()
+        public virtual void ActivateAnomaly()
         {
             if (_normalState != null) _normalState.SetActive(false);
             if (_anomalyState != null) _anomalyState.SetActive(true);
         }
 
-        public void ResetToNormal()
+        public virtual void ResetToNormal()
         {
             if (_anomalyState != null) _anomalyState.SetActive(false);
             if (_normalState != null) _normalState.SetActive(true);
