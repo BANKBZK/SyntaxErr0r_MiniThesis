@@ -79,9 +79,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 80
+  _chance: 60
   _safeLoops: 00000000
   _allAnomalies:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -147,6 +151,30 @@ MonoBehaviour:
   - name: UICancelPress
     clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
     volume: 0.6
+    pitch: 0.78
+    loop: 0
+    source: {fileID: 0}
+  - name: jumpscare
+    clip: {fileID: 8300000, guid: d8fd46eaea52ee74487a8f353f004de8, type: 3}
+    volume: 0.8
+    pitch: 0.78
+    loop: 0
+    source: {fileID: 0}
+  - name: Runningman
+    clip: {fileID: 8300000, guid: 163f69d362f22624bbb96959b8b78edb, type: 3}
+    volume: 0.6
+    pitch: 0.78
+    loop: 0
+    source: {fileID: 0}
+  - name: Soccerball
+    clip: {fileID: 8300000, guid: e7761cef591ac704db6606a274cd8668, type: 3}
+    volume: 0.6
+    pitch: 0.78
+    loop: 0
+    source: {fileID: 0}
+  - name: FallenChair
+    clip: {fileID: 8300000, guid: 1385f88b326093d49a46e99f0b7ab8d3, type: 3}
+    volume: 1
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
