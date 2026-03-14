@@ -51,6 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentLoop: 0
   IsPuzzleSolved: 1
+  IsRitualComplete: 0
 --- !u!114 &4393276515357542867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,8 +67,11 @@ MonoBehaviour:
   _playerTransform: {fileID: 0}
   _characterController: {fileID: 0}
   _startPoint: {fileID: 0}
+  _ritualStartPoint: {fileID: 0}
+  _ritualLoopTrigger: 4
   _fadeUI: {fileID: 0}
   _fadeDuration: 1
+  _finalLoopTrigger: 8
 --- !u!114 &1388815034223945503
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80,9 +84,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 60
-  _safeLoops: 00000000
+  _chance: 50
+  _safeLoops: 0000000004000000
   _allAnomalies:
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -173,14 +178,20 @@ MonoBehaviour:
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
-  - name: FallenChair
-    clip: {fileID: 8300000, guid: 1385f88b326093d49a46e99f0b7ab8d3, type: 3}
+  - name: FallingChair
+    clip: {fileID: 8300000, guid: 1b919f5b92a729940bf7cf0a9cdb6900, type: 3}
     volume: 1
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
   - name: PlayerPant
     clip: {fileID: 8300000, guid: 6f794660d11837747b975525f98d5173, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: FlashlightCrank
+    clip: {fileID: 8300000, guid: eb7734be5c97e0349a031c5a16fdf5eb, type: 3}
     volume: 1
     pitch: 1
     loop: 0
@@ -224,7 +235,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   totalItemsNeeded: 3
-  _spawnPoints: []
-  _ritualItems: []
+  _spawnPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  _ritualItems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   _itemsHolding: 0
   _itemsPlaced: 0

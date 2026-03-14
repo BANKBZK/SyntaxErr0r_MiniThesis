@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using SyntaxError.Inputs; // เรียกใช้ Namespace ของ Input
+using SyntaxError.Inputs;
 
 namespace SyntaxError.Player
 {
@@ -12,18 +12,12 @@ namespace SyntaxError.Player
         [SerializeField] private Transform _playerBody;
 
         [Header("Settings")]
-        [SerializeField] private float _mouseSensitivity = 100f;
+        // [ข้อควรระวัง] พอเอา Time.deltaTime ออก เมาส์จะไวขึ้นมาก แนะนำให้ปรับค่านี้ใน Inspector เหลือประมาณ 0.5 - 2.0 ครับ
+        [SerializeField] private float _mouseSensitivity = 1f;
         [SerializeField] private float _topClamp = -90f;
         [SerializeField] private float _bottomClamp = 90f;
 
         private float _xRotation = 0f;
-
-        //private void Start()
-        //{
-        //    // ล็อกเมาส์ให้อยู่กลางจอ
-        //    Cursor.lockState = CursorLockMode.Locked;
-        //    Cursor.visible = false;
-        //}
 
         private void Update()
         {
@@ -34,9 +28,9 @@ namespace SyntaxError.Player
         {
             if (_inputManager == null) return;
 
-            // รับค่าจาก InputManager
-            float mouseX = _inputManager.LookInput.x * _mouseSensitivity * Time.deltaTime;
-            float mouseY = _inputManager.LookInput.y * _mouseSensitivity * Time.deltaTime;
+            // [แก้] เอา Time.deltaTime ออกจากการคำนวณ Mouse Delta
+            float mouseX = _inputManager.LookInput.x * _mouseSensitivity;
+            float mouseY = _inputManager.LookInput.y * _mouseSensitivity;
 
             // คำนวณการก้มเงย (Rotation รอบแกน X)
             _xRotation -= mouseY;
