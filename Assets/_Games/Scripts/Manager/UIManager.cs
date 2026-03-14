@@ -37,6 +37,13 @@ namespace SyntaxError.Managers
         [Header("Story UI")]
         public TextMeshProUGUI storyText; // ลาก Text UI สำหรับเนื้อเรื่องมาใส่
         public float storyFadeSpeed = 1.5f; // ความเร็วในการเฟดข้อความ
+
+        [Header("Exhaustion VFX")]
+        public CanvasGroup exhaustionUI; // ลาก Panel สีดำสำหรับหน้ามืดมาใส่
+        public float exhaustionPulseSpeed = 2f; // ความเร็วกระพริบ
+        public float maxExhaustionDarkness = 0.7f; // ความมืดสูงสุด (0.0 - 1.0) แนะนำ 0.7 จะได้ไม่มืดจนมองไม่เห็นทาง
+
+        private Coroutine _exhaustionRoutine;
         private void Awake()
         {
             if (Instance == null) Instance = this;
@@ -244,6 +251,47 @@ namespace SyntaxError.Managers
         public void UpdateLoopDisplay(int currentLoop)
         {
             if (loopText != null) loopText.text = $"Loop : {currentLoop}";
+        }
+        public void ToggleExhaustionEffect(bool isExhausted)
+        {
+            if (isExhausted)
+            {
+                if (_exhaustionRoutine == null)
+                {
+                    if (exhaustionUI != null) exhaustionUI.gameObject.SetActive(true);
+                    _exhaustionRoutine = StartCoroutine(ExhaustionPulseRoutine());
+                }
+            }
+            else
+            {
+                if (_exhaustionRoutine != null)
+                {
+                    StopCoroutine(_exhaustionRoutine);
+                    _exhaustionRoutine = null;
+                }
+
+                // หายเหนื่อยแล้ว ซ่อนจอดำทิ้ง
+                if (exhaustionUI != null)
+                {
+                    exhaustionUI.alpha = 0f;
+                    exhaustionUI.gameObject.SetActive(false);
+                }
+            }
+        }
+        private System.Collections.IEnumerator ExhaustionPulseRoutine()
+        {
+            while (true)
+            {
+                if (exhaustionUI != null)
+                {
+                    // Mathf.PingPong จะทำให้ค่าวิ่งขึ้นลงไปมาระหว่าง 0 ถึง maxExhaustionDarkness
+                    float alpha = Mathf.PingPong(Time.time * exhaustionPulseSpeed, maxExhaustionDarkness);
+
+                    // ทำให้มันไม่สว่างวาบจนเกินไป (ขั้นต่ำให้มืดไว้ที่ 0.2)
+                    exhaustionUI.alpha = Mathf.Clamp(alpha, 0.2f, maxExhaustionDarkness);
+                }
+                yield return null;
+            }
         }
     }
 }

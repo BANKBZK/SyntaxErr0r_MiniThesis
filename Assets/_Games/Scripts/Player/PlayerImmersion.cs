@@ -9,13 +9,15 @@ namespace SyntaxError.Player
         [Header("References")]
         [SerializeField] private CharacterController _controller;
         [SerializeField] private Transform _cameraHolder;
-        [SerializeField] private InputManager _inputManager; // เพิ่มตัวช่วยเช็ค Input
+        [SerializeField] private InputManager _inputManager;
 
         [Header("Head Bob Settings")]
         [SerializeField] private bool _enableHeadBob = true;
-        [SerializeField] private float _bobFrequency = 14.0f;
+        [Tooltip("ปรับลดลงเหลือ 10 เพื่อให้จังหวะเดินดูหน่วงและสมจริงขึ้น")]
+        [SerializeField] private float _bobFrequency = 10.0f;
         [SerializeField] private float _bobAmplitude = 0.05f;
-        [SerializeField] private float _sprintMultiplier = 1.5f;
+        [Tooltip("ปรับตัวคูณตอนวิ่งลงไม่ให้ภาพสวิงแรงเกินไป")]
+        [SerializeField] private float _sprintMultiplier = 1.3f;
 
         [Header("Footstep Settings")]
         [SerializeField] private bool _enableFootsteps = true;
@@ -27,7 +29,6 @@ namespace SyntaxError.Player
 
         private void Start()
         {
-            // Auto Find ถ้าลืมลาก
             if (_controller == null) _controller = GetComponent<CharacterController>();
             if (_inputManager == null) _inputManager = GetComponent<InputManager>();
 
@@ -38,7 +39,7 @@ namespace SyntaxError.Player
             else
             {
                 Debug.LogError("❌ PlayerImmersion: ไม่ได้ลาก Camera Holder ใส่ใน Inspector!");
-                enabled = false; // ปิดสคริปต์ไปเลยถ้าไม่มีของ
+                enabled = false;
             }
         }
 
@@ -51,29 +52,21 @@ namespace SyntaxError.Player
         {
             if (_controller == null || _cameraHolder == null) return;
 
-            // 1. เช็คความเร็วจริง
+            // 1. เช็คความเร็วจริงของ CharacterController
             Vector3 horizontalVelocity = new Vector3(_controller.velocity.x, 0, _controller.velocity.z);
             float speed = horizontalVelocity.magnitude;
 
-            // 2. เช็คว่าผู้เล่นกดเดินไหม (Input) - ใช้เป็นตัวสำรองเผื่อ CharacterController บั๊ก
+            // 2. เช็ค Input สำรอง
             bool hasInput = _inputManager != null && _inputManager.MoveInput.magnitude > 0.1f;
 
-            // เงื่อนไข: มีความเร็ว หรือ มีการกดปุ่มเดิน (และต้องไม่กระโดดสูงเกินไป)
             if ((speed > 0.1f || hasInput) && _controller.isGrounded)
             {
-                // Toggle Run/Walk
-                bool isSprinting = (_inputManager != null && _inputManager.IsSprinting);
-
-                float currentFreq = isSprinting ? _bobFrequency * _sprintMultiplier : _bobFrequency;
-                float currentAmp = isSprinting ? _bobAmplitude * _sprintMultiplier : _bobAmplitude;
-
+                bool isActuallySprinting = speed > 4.0f;
+                float currentFreq = isActuallySprinting ? _bobFrequency * _sprintMultiplier : _bobFrequency;
+                float currentAmp = isActuallySprinting ? _bobAmplitude * _sprintMultiplier : _bobAmplitude;
                 _timer += Time.deltaTime * currentFreq;
-
-                // คำนวณตำแหน่งใหม่
                 float newY = _defaultYPos + Mathf.Sin(_timer) * currentAmp;
                 _cameraHolder.localPosition = new Vector3(_cameraHolder.localPosition.x, newY, _cameraHolder.localPosition.z);
-
-                // เสียงเท้า
                 if (_enableFootsteps) HandleFootsteps(Mathf.Sin(_timer));
             }
             else
@@ -84,7 +77,6 @@ namespace SyntaxError.Player
 
         private void HandleFootsteps(float bobValue)
         {
-            // เล่นเสียงตอนกราฟตกสุด (เท้ากระแทกพื้น)
             if (bobValue < -0.95f)
             {
                 if (!_isStepPlayed)
@@ -93,7 +85,7 @@ namespace SyntaxError.Player
                     _isStepPlayed = true;
                 }
             }
-            else if (bobValue > 0.0f) // ยกขา
+            else if (bobValue > 0.0f)
             {
                 _isStepPlayed = false;
             }
@@ -103,7 +95,7 @@ namespace SyntaxError.Player
         {
             if (Mathf.Abs(_cameraHolder.localPosition.y - _defaultYPos) > 0.001f)
             {
-                _timer = 0; // Reset timer เพื่อให้เริ่มก้าวใหม่
+                _timer = 0;
                 Vector3 targetPos = new Vector3(_cameraHolder.localPosition.x, _defaultYPos, _cameraHolder.localPosition.z);
                 _cameraHolder.localPosition = Vector3.Lerp(_cameraHolder.localPosition, targetPos, Time.deltaTime * 5f);
             }
@@ -113,8 +105,10 @@ namespace SyntaxError.Player
         {
             if (_footstepSounds.Length == 0 || SoundManager.Instance == null) return;
 
-            // สุ่มเสียง
             string sound = _footstepSounds[Random.Range(0, _footstepSounds.Length)];
+
+            // ใช้เทคนิค Random Pitch ที่คุยกันรอบก่อน เพื่อให้เสียงดูสมจริงและประหยัดไฟล์
+            // (ถ้าไม่ได้ทำ PlaySFXRandomPitch ไว้ ให้เปลี่ยนกลับเป็น PlaySFX เฉยๆ นะครับ)
             SoundManager.Instance.PlaySFX(sound);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using SyntaxError.Inputs;
+using SyntaxError.Managers;
 
 namespace SyntaxError.Player
 {
@@ -11,66 +12,117 @@ namespace SyntaxError.Player
         private CharacterController _controller;
 
         [Header("Movement Settings")]
-        [SerializeField] private float _walkSpeed = 4.0f;
-        [SerializeField] private float _sprintSpeed = 7.0f;
+        [SerializeField] private float _walkSpeed = 3.0f;
+        [SerializeField] private float _sprintSpeed = 6.0f;
         [SerializeField] private float _gravity = -9.81f;
-        [SerializeField] private float _jumpHeight = 1.2f;
 
-        [Header("Ground Check")]
-        [SerializeField] private Transform _groundCheck;
-        [SerializeField] private float _groundDistance = 0.4f;
-        [SerializeField] private LayerMask _groundMask;
+        [Header("Stamina & Ritual Settings")]
+        [Tooltip("ถ้าเป็น False จะวิ่งไม่ได้เลย (ใช้ช่วงเดินโถงปกติ)")]
+        [SerializeField] private bool _canSprint = false;
 
+        [SerializeField] private float _maxStamina = 100f;
+        [SerializeField] private float _staminaDrainRate = 20f;
+        [SerializeField] private float _staminaRegenRate = 15f;
+
+        private float _currentStamina;
+        private bool _isExhausted = false;
         private Vector3 _velocity;
-        private bool _isGrounded;
 
-        private void Awake()
+        private void Start()
         {
             _controller = GetComponent<CharacterController>();
+            if (_inputManager == null) _inputManager = GetComponent<InputManager>();
+
+            _currentStamina = _maxStamina;
         }
 
         private void Update()
         {
-            if (_controller == null || !_controller.enabled)
-            {
-                return; // ป้องกันข้อผิดพลาดถ้า CharacterController ถูกปิด
-            }
-            HandleMovement();
-            HandleGravity();
+            HandleMovementAndStamina();
+            ApplyGravity();
         }
 
-        private void HandleMovement()
+        private void HandleMovementAndStamina()
         {
-            // ตรวจสอบว่าวิ่งอยู่ไหม
-            float currentSpeed = _inputManager.IsSprinting ? _sprintSpeed : _walkSpeed;
-
-            // รับค่าทิศทาง (แกน X และ Z)
             Vector2 input = _inputManager.MoveInput;
             Vector3 move = transform.right * input.x + transform.forward * input.y;
 
-            // สั่ง CharacterController ให้เคลื่อนที่
-            _controller.Move(move * currentSpeed * Time.deltaTime);
-
-            // กระโดด
-            if (_inputManager.IsJumpPressed && _isGrounded)
+            // --- เช็คเงื่อนไขการวิ่ง ---
+            // จะพยายามวิ่งได้ก็ต่อเมื่อ 1. อนุญาตให้วิ่ง (_canSprint) 2. กดปุ่มวิ่ง 3. มีการขยับตัวจริงๆ
+            bool isTryingToSprint = _canSprint && _inputManager.IsSprinting && move.magnitude > 0.1f;
+            // ถ้าระบบวิ่งถูกเปิดใช้งาน ถึงจะเริ่มคำนวณ Stamina
+            if (_canSprint)
             {
-                _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+                if (isTryingToSprint && !_isExhausted)
+                {
+                    _currentStamina -= _staminaDrainRate * Time.deltaTime;
+
+                    // จังหวะที่ Stamina เพิ่งหมดก๊อกแรก
+                    if (_currentStamina <= 0)
+                    {
+                        _currentStamina = 0;
+                        _isExhausted = true; // ล็อกสถานะเหนื่อยหอบ
+
+                        if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("PlayerPant");
+
+                        // สั่ง UIManager เปิดหน้ามืด
+                        if (UIManager.Instance != null) UIManager.Instance.ToggleExhaustionEffect(true);
+                    }
+                }
+                else
+                {
+                    // ฟื้นฟู Stamina
+                    if (_currentStamina < _maxStamina)
+                    {
+                        _currentStamina += _staminaRegenRate * Time.deltaTime;
+                        if (_currentStamina >= _maxStamina)
+                        {
+                            _currentStamina = _maxStamina;
+                            if (_isExhausted)
+                            {
+                                _isExhausted = false;
+
+                                // สั่ง UIManager ปิดเอฟเฟกต์หน้ามืด
+                                if (UIManager.Instance != null) UIManager.Instance.ToggleExhaustionEffect(false);
+                            }
+                        }
+                    }
+                }
             }
+            float currentSpeed = (isTryingToSprint && !_isExhausted) ? _sprintSpeed : _walkSpeed;
+
+            _controller.Move(move * currentSpeed * Time.deltaTime);
         }
 
-        private void HandleGravity()
+        private void ApplyGravity()
         {
-            // เช็คว่าเท้าติดพื้นไหม
-            _isGrounded = Physics.CheckSphere(_groundCheck.position, _groundDistance, _groundMask);
-
-            if (_isGrounded && _velocity.y < 0)
+            if (_controller.isGrounded && _velocity.y < 0)
             {
-                _velocity.y = -2f; // แรงกดเล็กน้อยเพื่อให้ติดพื้นตลอดเวลา
+                _velocity.y = -2f;
             }
 
-            // คำนวณแรงโน้มถ่วง
             _velocity.y += _gravity * Time.deltaTime;
             _controller.Move(_velocity * Time.deltaTime);
+        }
+
+        public void SetSprintAbility(bool canSprint)
+        {
+            _canSprint = canSprint;
+
+            // ถ้ายกเลิกการวิ่ง ให้รีเซ็ต Stamina กลับมาเต็มทันที
+            if (!canSprint)
+            {
+                _currentStamina = _maxStamina;
+                _isExhausted = false;
+            }
+
+            Debug.Log($"[PlayerController] Sprint ability set to: {_canSprint}");
+        }
+
+        // (Optional) เผื่อใช้ส่งค่าไปให้ UIManager วาดหลอด Stamina
+        public float GetStaminaNormalized()
+        {
+            return _currentStamina / _maxStamina;
         }
     }
 }
