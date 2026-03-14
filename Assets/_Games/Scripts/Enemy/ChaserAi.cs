@@ -121,13 +121,31 @@ namespace SyntaxError.Enemy
             float currentNoiseLevel = 0f;
             bool isMoving = _playerInput.MoveInput.magnitude > 0.1f;
 
-            // เสียงปั่นไฟฉายดังมากก
-            if (_playerInput.IsCranking) currentNoiseLevel = Mathf.Max(currentNoiseLevel, _crankHearingRadius);
-            // เสียงวิ่ง
-            if (isMoving && _playerInput.IsSprinting) currentNoiseLevel = Mathf.Max(currentNoiseLevel, _sprintHearingRadius);
-            // เสียงเดิน
-            else if (isMoving && !_playerInput.IsSprinting) currentNoiseLevel = Mathf.Max(currentNoiseLevel, _walkHearingRadius);
+            // เสียงปั่นไฟฉายยังคงดังเสมอแม้จะย่ออยู่
+            if (_playerInput.IsCranking)
+                currentNoiseLevel = Mathf.Max(currentNoiseLevel, _crankHearingRadius);
 
+            // คำนวณเสียงฝีเท้า
+            if (isMoving)
+            {
+                if (_playerInput.IsCrouching)
+                {
+                    // ถ้าย่อตัวเดิน ผีจะไม่ได้ยินเลย (0 เมตร) หรือได้ยินแค่ระยะกระชั้นชิดมาก (1 เมตร)
+                    currentNoiseLevel = Mathf.Max(currentNoiseLevel, 1f);
+                }
+                else if (_playerInput.IsSprinting)
+                {
+                    // วิ่งเสียงดัง
+                    currentNoiseLevel = Mathf.Max(currentNoiseLevel, _sprintHearingRadius);
+                }
+                else
+                {
+                    // เดินปกติ
+                    currentNoiseLevel = Mathf.Max(currentNoiseLevel, _walkHearingRadius);
+                }
+            }
+
+            // ถ้าผีอยู่ใกล้กว่าระยะเสียงที่ทำได้ = ได้ยิน
             return distanceToPlayer <= currentNoiseLevel;
         }
 

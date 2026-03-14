@@ -13,17 +13,21 @@ namespace SyntaxError.Player
 
         [Header("Head Bob Settings")]
         [SerializeField] private bool _enableHeadBob = true;
-        [Tooltip("ปรับลดลงเหลือ 10 เพื่อให้จังหวะเดินดูหน่วงและสมจริงขึ้น")]
         [SerializeField] private float _bobFrequency = 10.0f;
         [SerializeField] private float _bobAmplitude = 0.05f;
-        [Tooltip("ปรับตัวคูณตอนวิ่งลงไม่ให้ภาพสวิงแรงเกินไป")]
         [SerializeField] private float _sprintMultiplier = 1.3f;
+
+        [Header("Crouch Camera Settings")]
+        [Tooltip("ระยะที่กล้องจะลดระดับลงตอนย่อตัว")]
+        [SerializeField] private float _crouchYOffset = -0.6f;
+        [SerializeField] private float _crouchTransitionSpeed = 10f;
 
         [Header("Footstep Settings")]
         [SerializeField] private bool _enableFootsteps = true;
         [SerializeField] private string[] _footstepSounds;
 
-        private float _defaultYPos = 0;
+        private float _baseYPos = 0; // ความสูงกล้องต้นฉบับ
+        private float _defaultYPos = 0; // ความสูงเป้าหมายปัจจุบัน (เปลี่ยนไปมาตอนย่อ)
         private float _timer = 0;
         private bool _isStepPlayed = false;
 
@@ -34,29 +38,35 @@ namespace SyntaxError.Player
 
             if (_cameraHolder != null)
             {
-                _defaultYPos = _cameraHolder.localPosition.y;
-            }
-            else
-            {
-                Debug.LogError("❌ PlayerImmersion: ไม่ได้ลาก Camera Holder ใส่ใน Inspector!");
-                enabled = false;
+                // จำความสูงกล้องแต่แรกไว้
+                _baseYPos = _cameraHolder.localPosition.y;
+                _defaultYPos = _baseYPos;
             }
         }
 
         private void Update()
         {
+            HandleCrouchHeight();
             if (_enableHeadBob) HandleHeadBob();
+        }
+
+        private void HandleCrouchHeight()
+        {
+            if (_cameraHolder == null || _inputManager == null) return;
+
+            // กำหนดเป้าหมาย: ถ้าย่อตัว ให้กล้องต่ำลง ถ้าไม่ย่อ ให้กลับมาที่เดิม
+            float targetY = _inputManager.IsCrouching ? (_baseYPos + _crouchYOffset) : _baseYPos;
+
+            // ค่อยๆ เลื่อนความสูงแบบสมูท
+            _defaultYPos = Mathf.Lerp(_defaultYPos, targetY, Time.deltaTime * _crouchTransitionSpeed);
         }
 
         private void HandleHeadBob()
         {
             if (_controller == null || _cameraHolder == null) return;
 
-            // 1. เช็คความเร็วจริงของ CharacterController
             Vector3 horizontalVelocity = new Vector3(_controller.velocity.x, 0, _controller.velocity.z);
             float speed = horizontalVelocity.magnitude;
-
-            // 2. เช็ค Input สำรอง
             bool hasInput = _inputManager != null && _inputManager.MoveInput.magnitude > 0.1f;
 
             if ((speed > 0.1f || hasInput) && _controller.isGrounded)
@@ -64,10 +74,19 @@ namespace SyntaxError.Player
                 bool isActuallySprinting = speed > 4.0f;
                 float currentFreq = isActuallySprinting ? _bobFrequency * _sprintMultiplier : _bobFrequency;
                 float currentAmp = isActuallySprinting ? _bobAmplitude * _sprintMultiplier : _bobAmplitude;
+
+                // ถ้าย่อตัวอยู่ ให้ลด Head Bob ลงครึ่งนึง (เดินนิ่งขึ้น)
+                if (_inputManager.IsCrouching) currentAmp *= 0.5f;
+
                 _timer += Time.deltaTime * currentFreq;
                 float newY = _defaultYPos + Mathf.Sin(_timer) * currentAmp;
                 _cameraHolder.localPosition = new Vector3(_cameraHolder.localPosition.x, newY, _cameraHolder.localPosition.z);
-                if (_enableFootsteps) HandleFootsteps(Mathf.Sin(_timer));
+
+                // --- ระบบเสียงเท้า: ถ้าย่อตัวอยู่ จะไม่เล่นเสียงฝีเท้า (เงียบกริบ) ---
+                if (_enableFootsteps && !_inputManager.IsCrouching)
+                {
+                    HandleFootsteps(Mathf.Sin(_timer));
+                }
             }
             else
             {
@@ -85,10 +104,7 @@ namespace SyntaxError.Player
                     _isStepPlayed = true;
                 }
             }
-            else if (bobValue > 0.0f)
-            {
-                _isStepPlayed = false;
-            }
+            else if (bobValue > 0.0f) _isStepPlayed = false;
         }
 
         private void ResetCameraPosition()
@@ -103,12 +119,8 @@ namespace SyntaxError.Player
 
         private void PlayRandomFootstep()
         {
-            if (_footstepSounds.Length == 0 || SoundManager.Instance == null) return;
-
+            if (_footstepSounds == null || _footstepSounds.Length == 0 || SoundManager.Instance == null) return;
             string sound = _footstepSounds[Random.Range(0, _footstepSounds.Length)];
-
-            // ใช้เทคนิค Random Pitch ที่คุยกันรอบก่อน เพื่อให้เสียงดูสมจริงและประหยัดไฟล์
-            // (ถ้าไม่ได้ทำ PlaySFXRandomPitch ไว้ ให้เปลี่ยนกลับเป็น PlaySFX เฉยๆ นะครับ)
             SoundManager.Instance.PlaySFX(sound);
         }
     }

@@ -9,17 +9,26 @@ namespace SyntaxError.Player
     {
         [Header("References")]
         [SerializeField] private InputManager _inputManager;
+        [SerializeField] private Transform _cameraHolder; // [เพิ่ม] ใส่ CameraHolder ตรงนี้เพื่อให้กล้องเตี้ยลงตอนย่อ
         private CharacterController _controller;
 
         [Header("Movement Settings")]
         [SerializeField] private float _walkSpeed = 3.0f;
         [SerializeField] private float _sprintSpeed = 6.0f;
+        [SerializeField] private float _crouchSpeed = 1.5f;
         [SerializeField] private float _gravity = -9.81f;
 
-        [Header("Stamina & Ritual Settings")]
-        [Tooltip("ถ้าเป็น False จะวิ่งไม่ได้เลย (ใช้ช่วงเดินโถงปกติ)")]
-        [SerializeField] private bool _canSprint = false;
+        [Header("Crouch Settings")]
+        [SerializeField] private float _normalHeight = 1.7f; // ปรับตามความสูงโมเดล
+        [SerializeField] private float _crouchHeight = 1.0f;
+        [SerializeField] private float _crouchTransitionSpeed = 10f;
 
+        // เก็บความสูงเดิมของกล้องตอนยืน
+        private float _normalCameraY;
+        private float _crouchCameraY;
+
+        [Header("Stamina & Ritual Settings")]
+        [SerializeField] private bool _canSprint = false;
         [SerializeField] private float _maxStamina = 100f;
         [SerializeField] private float _staminaDrainRate = 20f;
         [SerializeField] private float _staminaRegenRate = 15f;
@@ -34,11 +43,19 @@ namespace SyntaxError.Player
             if (_inputManager == null) _inputManager = GetComponent<InputManager>();
 
             _currentStamina = _maxStamina;
+
+            // จัดการความสูงกล้อง
+            if (_cameraHolder != null)
+            {
+                _normalCameraY = _cameraHolder.localPosition.y;
+                _crouchCameraY = _normalCameraY - (_normalHeight - _crouchHeight) / 2f;
+            }
         }
 
         private void Update()
         {
             if (!_controller.enabled) return;
+
             HandleMovementAndStamina();
             ApplyGravity();
         }
@@ -48,31 +65,42 @@ namespace SyntaxError.Player
             Vector2 input = _inputManager.MoveInput;
             Vector3 move = transform.right * input.x + transform.forward * input.y;
 
-            // --- เช็คเงื่อนไขการวิ่ง ---
-            // จะพยายามวิ่งได้ก็ต่อเมื่อ 1. อนุญาตให้วิ่ง (_canSprint) 2. กดปุ่มวิ่ง 3. มีการขยับตัวจริงๆ
-            bool isTryingToSprint = _canSprint && _inputManager.IsSprinting && move.magnitude > 0.1f;
-            // ถ้าระบบวิ่งถูกเปิดใช้งาน ถึงจะเริ่มคำนวณ Stamina
+            bool isCrouching = _inputManager.IsCrouching;
+            bool isTryingToSprint = !isCrouching && _canSprint && _inputManager.IsSprinting && move.magnitude > 0.1f;
+
+            // --- ระบบย่อตัว ---
+            float targetHeight = isCrouching ? _crouchHeight : _normalHeight;
+            _controller.height = Mathf.Lerp(_controller.height, targetHeight, Time.deltaTime * _crouchTransitionSpeed);
+
+            // [แก้] ปรับ Center ให้ฐาน (เท้า) อยู่ที่ Y = 0 เสมอ
+            _controller.center = new Vector3(0, _controller.height / 2f, 0);
+
+            // [เพิ่ม] ขยับกล้องให้เตี้ยลงเวลานั่งยอง
+            if (_cameraHolder != null)
+            {
+                Vector3 camPos = _cameraHolder.localPosition;
+                float targetCamY = isCrouching ? _crouchCameraY : _normalCameraY;
+                camPos.y = Mathf.Lerp(camPos.y, targetCamY, Time.deltaTime * _crouchTransitionSpeed);
+                _cameraHolder.localPosition = camPos;
+            }
+
+            // --- ระบบคำนวณ Stamina ---
+            // (โค้ด Stamina ส่วนนี้ใช้งานได้ดีอยู่แล้วครับ)
             if (_canSprint)
             {
                 if (isTryingToSprint && !_isExhausted)
                 {
                     _currentStamina -= _staminaDrainRate * Time.deltaTime;
-
-                    // จังหวะที่ Stamina เพิ่งหมดก๊อกแรก
                     if (_currentStamina <= 0)
                     {
                         _currentStamina = 0;
-                        _isExhausted = true; // ล็อกสถานะเหนื่อยหอบ
-
+                        _isExhausted = true;
                         if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("PlayerPant");
-
-                        // สั่ง UIManager เปิดหน้ามืด
                         if (UIManager.Instance != null) UIManager.Instance.ToggleExhaustionEffect(true);
                     }
                 }
                 else
                 {
-                    // ฟื้นฟู Stamina
                     if (_currentStamina < _maxStamina)
                     {
                         _currentStamina += _staminaRegenRate * Time.deltaTime;
@@ -82,26 +110,24 @@ namespace SyntaxError.Player
                             if (_isExhausted)
                             {
                                 _isExhausted = false;
-
-                                // สั่ง UIManager ปิดเอฟเฟกต์หน้ามืด
                                 if (UIManager.Instance != null) UIManager.Instance.ToggleExhaustionEffect(false);
                             }
                         }
                     }
                 }
             }
-            float currentSpeed = (isTryingToSprint && !_isExhausted) ? _sprintSpeed : _walkSpeed;
+
+            // --- กำหนดความเร็วจริง ---
+            float currentSpeed = _walkSpeed;
+            if (isCrouching) currentSpeed = _crouchSpeed;
+            else if (isTryingToSprint && !_isExhausted) currentSpeed = _sprintSpeed;
 
             _controller.Move(move * currentSpeed * Time.deltaTime);
         }
 
         private void ApplyGravity()
         {
-            if (_controller.isGrounded && _velocity.y < 0)
-            {
-                _velocity.y = -2f;
-            }
-
+            if (_controller.isGrounded && _velocity.y < 0) _velocity.y = -2f;
             _velocity.y += _gravity * Time.deltaTime;
             _controller.Move(_velocity * Time.deltaTime);
         }
@@ -109,21 +135,11 @@ namespace SyntaxError.Player
         public void SetSprintAbility(bool canSprint)
         {
             _canSprint = canSprint;
-
-            // ถ้ายกเลิกการวิ่ง ให้รีเซ็ต Stamina กลับมาเต็มทันที
             if (!canSprint)
             {
                 _currentStamina = _maxStamina;
                 _isExhausted = false;
             }
-
-            Debug.Log($"[PlayerController] Sprint ability set to: {_canSprint}");
-        }
-
-        // (Optional) เผื่อใช้ส่งค่าไปให้ UIManager วาดหลอด Stamina
-        public float GetStaminaNormalized()
-        {
-            return _currentStamina / _maxStamina;
         }
     }
 }

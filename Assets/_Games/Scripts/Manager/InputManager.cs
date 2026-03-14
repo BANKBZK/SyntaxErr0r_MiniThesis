@@ -16,6 +16,7 @@ namespace SyntaxError.Inputs
         public bool IsInteractPressed { get; private set; }
         public bool IsFlashlightPressed { get; private set; }
 
+        public bool IsCrouching { get; private set; }
         public bool IsCranking { get; private set; }
 
 
@@ -56,6 +57,10 @@ namespace SyntaxError.Inputs
             // Flashlight Crank Toggle (กดปุ่ม R)
             _inputActions.Player.Crank.performed += i => IsCranking = true;
             _inputActions.Player.Crank.canceled += i => IsCranking = false;
+
+            // Crouch Toggle (กดปุ่ม Left Ctrl)
+            _inputActions.Player.Crouch.performed += i => IsCrouching = true;
+            _inputActions.Player.Crouch.canceled += i => IsCrouching = false;
 
         }
 
