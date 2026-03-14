@@ -31,6 +31,10 @@ namespace SyntaxError.Managers
         [SerializeField] private CanvasGroup _fadeUI;
         [SerializeField] private float _fadeDuration = 1.0f;
 
+        [Header("Ending Settings")]
+        [Tooltip("Loop สุดท้ายที่จะตัดสินจบเกม (เช่น 8)")]
+        [SerializeField] private int _finalLoopTrigger = 8;
+
         private List<IResettable> _resettableObjects = new List<IResettable>();
         private bool _isTeleporting = false;
         public bool IsTeleporting => _isTeleporting;
@@ -71,6 +75,30 @@ namespace SyntaxError.Managers
                 {
                     GameManager.Instance.NextLoop();
                     if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("Correct");
+
+                    // ==========================================
+                    // 🏁 เช็คฉากจบเกม (The Ending Router)
+                    // ==========================================
+                    if (GameManager.Instance.CurrentLoop == _finalLoopTrigger)
+                    {
+                        // ถ้ามาถึง Loop 8 แล้ว ให้เช็คความจำว่าทำพิธีมาไหม?
+                        if (GameManager.Instance.IsRitualComplete)
+                        {
+                            Debug.Log("<color=yellow>=== TRUE ENDING ===</color>");
+                            // เรียกหน้าจอชนะ หรือพาไปฉาก True Ending
+                        }
+                        else
+                        {
+                            Debug.Log("<color=red>=== BAD ENDING ===</color>");
+                            // TODO: เดี๋ยวนายทำหน้า Bad Ending หรือให้ผีมากระโดดงับหัวตรงนี้ได้เลย!
+                            // ถ้ายังไม่มีชั่วคราว ก็ให้เรียก ShowWinScreen ไปก่อน หรือสร้างฟังก์ชัน ShowBadEnding() ใน UIManager ครับ
+                        }
+
+                        yield return StartCoroutine(FadeRoutine(1f, 0f)); // เฟดจอสว่างให้เห็นหน้า UI
+                        _isTeleporting = false;
+                        yield break; // หยุดการทำงานของ Coroutine นี้ไปเลย ไม่ต้องวาร์ปแล้ว (จบเกม)
+                    }
+                    // ==========================================
                 }
                 else
                 {

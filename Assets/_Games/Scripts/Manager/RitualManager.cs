@@ -105,9 +105,19 @@ namespace SyntaxError.Ritual
         {
             if (_itemsPlaced >= totalItemsNeeded)
             {
-                Debug.Log("<color=green>TRUE ENDING UNLOCKED! พิธีกรรมสมบูรณ์!</color>");
-                // TODO: เดี๋ยวนายสามารถไปทำระบบฉากจบได้ตรงนี้
-                // UIManager.Instance.ShowWinScreen(); 
+                // บันทึกความจำลง GameManager ว่าทำ Side Quest สำเร็จแล้ว!
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.IsRitualComplete = true;
+                }
+
+                Debug.Log("<color=green>พิธีกรรมสมบูรณ์! รีบหาทางออกเพื่อหนีกลับโรงเรียนเร็ว!</color>");
+
+                // (Optional) สั่งโชว์ Text กลางจอใบ้ให้ผู้เล่นรู้ว่าต้องออก
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.ShowStoryText("The ritual is complete... Find the exit!", 4f);
+                }
             }
         }
 

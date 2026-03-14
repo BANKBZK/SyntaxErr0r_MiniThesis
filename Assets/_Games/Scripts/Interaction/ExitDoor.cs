@@ -11,6 +11,10 @@ namespace SyntaxError.Interaction
         [Tooltip("True = โหวตว่ามีผี / False = โหวตว่าปกติ")]
         [SerializeField] private bool _isAnomalyExit = false;
 
+        [Header("Custom UI (Optional)")]
+        [Tooltip("ถ้าพิมพ์ข้อความลงไป จะใช้คำนี้แทน Default (เช่น 'Escape to School')")]
+        [SerializeField] private string _customPromptText = "";
+
         [Header("Animation")]
         [SerializeField] private Transform _doorModel;
         [SerializeField] private Vector3 _openOffset = new Vector3(0, 0, 1f);
@@ -26,17 +30,15 @@ namespace SyntaxError.Interaction
 
         public void Interact()
         {
-            // 1. เช็คความปลอดภัย: ถ้า LoopManager กำลังทำงานอยู่ ห้ามยุ่งเด็ดขาด!
             if (LoopManager.Instance != null && LoopManager.Instance.IsTeleporting)
             {
                 Debug.LogWarning("LoopManager is busy teleporting. Interaction Ignored.");
                 return;
             }
 
-            if (_isClicked) return; // กันกดซ้ำในตัวมันเอง
+            if (_isClicked) return;
             _isClicked = true;
 
-            // เล่นเสียง
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("DoorOpen");
 
             StartCoroutine(OpenAndSubmit());
@@ -44,16 +46,21 @@ namespace SyntaxError.Interaction
 
         public string GetPromptText()
         {
-            // ถ้ากดไปแล้ว หรือระบบกำลังวาร์ป ไม่ต้องขึ้นข้อความ
             if (_isClicked || (LoopManager.Instance != null && LoopManager.Instance.IsTeleporting))
                 return "";
 
+            // ถ้ามีข้อความ Custom ให้โชว์ข้อความ Custom
+            if (!string.IsNullOrEmpty(_customPromptText))
+            {
+                return _customPromptText;
+            }
+
+            // ถ้าไม่ได้พิมพ์อะไรไว้ ให้ใช้ข้อความ Default
             return _isAnomalyExit ? "Report Anomaly" : "Proceed (Normal)";
         }
 
         private IEnumerator OpenAndSubmit()
         {
-            // Animation ประตูเปิด
             if (_doorModel != null)
             {
                 Vector3 startPos = _doorModel.localPosition;
@@ -67,14 +74,12 @@ namespace SyntaxError.Interaction
                 }
             }
 
-            // ส่งคำตอบให้ LoopManager
             if (LoopManager.Instance != null)
             {
                 LoopManager.Instance.SubmitVote(_isAnomalyExit);
             }
             else
             {
-                // Safety: ถ้าหา LoopManager ไม่เจอ ให้ปลดล็อกเพื่อให้ลองกดใหม่ได้
                 _isClicked = false;
                 Debug.LogError("Critical Error: LoopManager not found!");
             }

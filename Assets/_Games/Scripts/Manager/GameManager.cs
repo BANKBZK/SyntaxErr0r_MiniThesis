@@ -9,6 +9,7 @@ namespace SyntaxError.Managers
         [Header("Global State")]
         public int CurrentLoop = 0; // เริ่มต้นที่ 0 (Tutorial)
         public bool IsPuzzleSolved = false;
+        public bool IsRitualComplete = false;
 
         private void Awake()
         {
