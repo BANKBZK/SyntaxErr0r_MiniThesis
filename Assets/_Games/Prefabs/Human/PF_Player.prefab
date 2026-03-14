@@ -286,12 +286,10 @@ MonoBehaviour:
   _walkSpeed: 4
   _sprintSpeed: 7
   _gravity: -9.81
-  _jumpHeight: 1.2
-  _groundCheck: {fileID: 6940843325563100959}
-  _groundDistance: 0.4
-  _groundMask:
-    serializedVersion: 2
-    m_Bits: 1048576
+  _canSprint: 0
+  _maxStamina: 100
+  _staminaDrainRate: 20
+  _staminaRegenRate: 15
 --- !u!114 &5697490404761585134
 MonoBehaviour:
   m_ObjectHideFlags: 0

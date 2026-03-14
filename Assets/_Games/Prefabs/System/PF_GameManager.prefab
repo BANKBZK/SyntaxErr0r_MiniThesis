@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1388815034223945503}
   - component: {fileID: 2975407796540419083}
   - component: {fileID: 1010481440243996040}
+  - component: {fileID: 1626192248556053624}
   m_Layer: 0
   m_Name: PF_GameManager
   m_TagString: Untagged
@@ -178,6 +179,12 @@ MonoBehaviour:
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
+  - name: PlayerPant
+    clip: {fileID: 8300000, guid: 6f794660d11837747b975525f98d5173, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
 --- !u!114 &1010481440243996040
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,3 +208,23 @@ MonoBehaviour:
   fadeDuration: 0
   storyText: {fileID: 0}
   storyFadeSpeed: 1.5
+  exhaustionUI: {fileID: 0}
+  exhaustionPulseSpeed: 1
+  maxExhaustionDarkness: 0.7
+--- !u!114 &1626192248556053624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8388515180496024119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 149a1c073ddac0d408c3629a5789b172, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  totalItemsNeeded: 3
+  _spawnPoints: []
+  _ritualItems: []
+  _itemsHolding: 0
+  _itemsPlaced: 0

@@ -38,6 +38,7 @@ namespace SyntaxError.Player
 
         private void Update()
         {
+            if (!_controller.enabled) return;
             HandleMovementAndStamina();
             ApplyGravity();
         }

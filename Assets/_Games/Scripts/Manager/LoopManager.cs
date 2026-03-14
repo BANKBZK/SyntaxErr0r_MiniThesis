@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using SyntaxError.Interfaces;
 using SyntaxError.Player;
-using SyntaxError.Interaction; // เรียก ExitDoor
+using SyntaxError.Interaction;
+using SyntaxError.Ritual;
 
 namespace SyntaxError.Managers
 {
@@ -14,14 +15,20 @@ namespace SyntaxError.Managers
         [Header("References")]
         [SerializeField] private Transform _playerTransform;
         [SerializeField] private CharacterController _characterController;
+
+        [Header("Teleport Points")]
+        [Tooltip("จุดเกิดปกติ (Loop 0-3)")]
         [SerializeField] private Transform _startPoint;
+
+        [Tooltip("จุดเกิดในด่านหนีผี (Ritual Level)")]
+        [SerializeField] private Transform _ritualStartPoint;
+
+        [Header("Loop Sequence Settings")]
+        [Tooltip("เข้าสู่ด่าน Ritual เมื่อเริ่ม Loop ที่เท่าไหร่? (เช่น 4)")]
+        [SerializeField] private int _ritualLoopTrigger = 4;
+
+        [Header("UI Settings")]
         [SerializeField] private CanvasGroup _fadeUI;
-
-        // --- ไม่ต้องลากไฟล์เสียงตรงนี้แล้ว ไปลากใน SoundManager แทน ---
-        // [SerializeField] private AudioClip _correctSound; 
-        // [SerializeField] private AudioClip _wrongSound;
-
-        [Header("Settings")]
         [SerializeField] private float _fadeDuration = 1.0f;
 
         private List<IResettable> _resettableObjects = new List<IResettable>();
@@ -33,7 +40,6 @@ namespace SyntaxError.Managers
         private void Start()
         {
             if (_fadeUI != null) { _fadeUI.alpha = 1f; _fadeUI.blocksRaycasts = false; StartCoroutine(FadeRoutine(1f, 0f)); }
-
         }
 
         public void Register(IResettable obj) { if (!_resettableObjects.Contains(obj)) _resettableObjects.Add(obj); }
@@ -64,32 +70,61 @@ namespace SyntaxError.Managers
                 if (isCorrect)
                 {
                     GameManager.Instance.NextLoop();
-                    // เรียกเสียงจาก SoundManager
                     if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("Correct");
                 }
                 else
                 {
                     GameManager.Instance.ResetToZero();
-                    // เรียกเสียงจาก SoundManager
                     if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("Wrong");
                 }
             }
 
             int loop = GameManager.Instance != null ? GameManager.Instance.CurrentLoop : 0;
 
-            // --- ย้ายผู้เล่น & Reset ---
+            // ปิด CharacterController ก่อนย้ายตำแหน่ง
             if (_characterController != null) _characterController.enabled = false;
-            _playerTransform.position = _startPoint.position;
-            _playerTransform.rotation = _startPoint.rotation;
+
+            // ==========================================
+            // 🚂 ระบบสับราง (The Loop Router)
+            // ==========================================
+            if (loop == _ritualLoopTrigger && isCorrect)
+            {
+                // 1. วาร์ปไปด่าน Ritual
+                if (_ritualStartPoint != null)
+                {
+                    _playerTransform.position = _ritualStartPoint.position;
+                    _playerTransform.rotation = _ritualStartPoint.rotation;
+                }
+
+                // 2. สั่งเปิดระบบวิ่ง
+                PlayerController pController = _characterController.GetComponent<PlayerController>();
+                if (pController != null) pController.SetSprintAbility(true);
+
+                // 3. เริ่มระบบหาของไหว้ (สุ่มเกิดไอเทม)
+                if (RitualManager.Instance != null) RitualManager.Instance.SetupRitualPhase();
+
+                Debug.Log("<color=red>Entering Ritual Phase! วิ่งงงง!!</color>");
+            }
+            else
+            {
+                // กลับมาเดินโถงปกติ (ไม่ว่าจะลูป 1-3 หรือตอบผิดกลับลูป 0)
+                _playerTransform.position = _startPoint.position;
+                _playerTransform.rotation = _startPoint.rotation;
+
+                // ล็อกไม่ให้วิ่ง (เผื่อเพิ่งตายกลับมาจากด่าน Ritual จะได้โดนริบความสามารถวิ่งคืน)
+                PlayerController pController = _characterController.GetComponent<PlayerController>();
+                if (pController != null) pController.SetSprintAbility(false);
+            }
+            // ==========================================
+
             Physics.SyncTransforms();
 
+            // รีเซ็ตของในฉาก (ทางเดินปกติ)
             foreach (var obj in _resettableObjects) if (obj != null) obj.OnLoopReset(loop);
 
-            // Reset ประตู ExitDoor (หาแบบ FindObject เพราะประตูไม่ได้ลงทะเบียน IResettable)
             ExitDoor[] exits = FindObjectsByType<ExitDoor>(FindObjectsSortMode.None);
             foreach (var exit in exits) exit.ResetDoor();
 
-            // คำนวณ Anomaly รอบใหม่
             if (AnomalyManager.Instance != null) AnomalyManager.Instance.ProcessLoop(loop);
 
             yield return null;
