@@ -196,6 +196,12 @@ MonoBehaviour:
     pitch: 1
     loop: 0
     source: {fileID: 0}
+  - name: GhostWhisper
+    clip: {fileID: 8300000, guid: 3a90328728ca0794ebda6eafce3ec2a0, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
 --- !u!114 &1010481440243996040
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -2,16 +2,17 @@
 using UnityEngine.AI;
 using SyntaxError.Player;
 using SyntaxError.Inputs;
+using SyntaxError.Managers;
 
 namespace SyntaxError.Enemy
 {
     public enum AIState
     {
-        Idle,     // หยุดยืนนิ่งๆ
-        Patrol,   // เดินสุ่ม
-        Stalk,    // แอบตาม (อ้อมหลัง)
-        Chase,    // วิ่งไล่ฆ่า
-        Flee      // วิ่งหนีไปซ่อน
+        Idle,
+        Patrol,
+        Stalk,
+        Chase,
+        Flee
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
@@ -28,50 +29,57 @@ namespace SyntaxError.Enemy
         public AIState CurrentState = AIState.Idle;
 
         [Header("Opportunity System (RNG)")]
-        [Tooltip("ความฉลาด/ความดุ ของ AI (1-20) ยิ่งเยอะยิ่งขยับอ้อมหลังบ่อย")]
         [Range(1, 20)]
-        [SerializeField] private int _aiLevel = 12;
+        [SerializeField] private int _aiLevel = 14;
         private string _lastRollResult = "";
 
-        [Header("State Intervals (เวลาดักรอเมื่อเดินถึงจุดหมาย)")]
-        [SerializeField] private float _idleTimeMin = 1f;
-        [SerializeField] private float _idleTimeMax = 3f;
-        [SerializeField] private float _patrolWaitTime = 2f; // รอ 2 วิ หลังเดินถึงจุด Patrol
-        [SerializeField] private float _stalkWaitTime = 3f;  // ซุ่มดักรอ 3 วิ หลังเดินอ้อมหลังสำเร็จ
+        [Header("State Intervals")]
+        [SerializeField] private float _idleTimeMin = 2f;
+        [SerializeField] private float _idleTimeMax = 4f;
+        [SerializeField] private float _patrolWaitTime = 2f;
+        [SerializeField] private float _stalkWaitTime = 0.5f;
 
         private float _stateTimer = 0f;
 
-        [Header("Director System (Menace Gauge)")]
-        [SerializeField] private float _menaceGauge = 0f;
-        [SerializeField] private float _maxMenace = 100f;
+        [Header("Impatience System (หาจังหวะทีเผลอ)")]
+        [SerializeField] private float _impatienceGauge = 0f;
+        [SerializeField] private float _maxImpatience = 100f;
 
-        [Header("Vision Settings (การมองเห็น)")]
+        [Header("Vision Settings")]
         [SerializeField] private float _sightRadiusDark = 4f;
         [SerializeField] private float _sightRadiusLight = 25f;
         [SerializeField] private LayerMask _obstacleMask;
 
-        [Header("Light Stun Settings (ส่องไฟไล่ผี)")]
-        [SerializeField] private float _timeToStun = 4.0f;
+        [Header("Light Stun Settings")]
+        [SerializeField] private float _timeToStun = 3.0f;
         [SerializeField] private float _minBatteryToStun = 50f;
-        [Tooltip("ตัวคูณความเร็วตอนโดนแสงไฟ (0.3 = ความเร็วเหลือ 30%)")]
-        [SerializeField] private float _stunSlowdownMultiplier = 0.3f;
+        [SerializeField] private float _stunSlowdownMultiplier = 0.1f;
         private float _currentStunTime = 0f;
 
-        [Header("Hearing Settings (การได้ยิน)")]
-        [SerializeField] private float _crankHearingRadius = 20f;
+        [Header("Hearing Settings")]
+        [SerializeField] private float _crankHearingRadius = 25f;
         [SerializeField] private float _sprintHearingRadius = 15f;
         [SerializeField] private float _walkHearingRadius = 4f;
 
+        [Header("Audio (ความหลอน)")]
+        [SerializeField] private string _stalkStartSound = "GhostWhisper";
+        [SerializeField] private string _chaseMusic = "ChaseTheme";
+        [SerializeField] private float _stalkSoundCooldown = 15f;
+        private float _stalkSoundTimer = 0f;
+
         [Header("Movement & Speeds")]
-        [SerializeField] private float _patrolSpeed = 1.5f;
-        [SerializeField] private float _stalkSpeed = 2.5f;
-        [SerializeField] private float _chaseSpeed = 4.8f;
-        [SerializeField] private float _fleeSpeed = 7.0f;
+        [SerializeField] private float _patrolSpeed = 1.2f;
+        [SerializeField] private float _stalkSpeed = 3.5f;
+        [SerializeField] private float _chaseSpeed = 5.5f;
+        [SerializeField] private float _fleeSpeed = 8.0f;
         [SerializeField] private float _killDistance = 1.6f;
+
+        [Header("Chase Settings")]
+        [SerializeField] private float _maxChaseTime = 10f;
 
         [Header("Turn & Acceleration")]
         [SerializeField] private float _turnSpeed = 150f;
-        [SerializeField] private float _acceleration = 5f;
+        [SerializeField] private float _acceleration = 6f;
 
         private Vector3 _lastPlayerPos;
         private Vector3 _playerVelocity;
@@ -95,6 +103,8 @@ namespace SyntaxError.Enemy
         {
             if (_playerTransform == null) return;
 
+            if (_stalkSoundTimer > 0) _stalkSoundTimer -= Time.deltaTime;
+
             CalculatePlayerVelocity();
 
             float distanceToPlayer = Vector3.Distance(transform.position, _playerTransform.position);
@@ -102,7 +112,7 @@ namespace SyntaxError.Enemy
             bool canHearPlayer = CheckHearing(distanceToPlayer);
             bool isPlayerLookingAtMe = CheckIfPlayerLooking();
 
-            UpdateMenaceGauge(distanceToPlayer);
+            UpdateImpatienceGauge(distanceToPlayer, isPlayerLookingAtMe);
             HandleLightStunTimer(canSeePlayer, isPlayerLookingAtMe);
             HandleStateMachine(distanceToPlayer, canSeePlayer, canHearPlayer, isPlayerLookingAtMe);
 
@@ -116,12 +126,19 @@ namespace SyntaxError.Enemy
 
         private void ChangeState(AIState newState)
         {
+            if (CurrentState == AIState.Chase && newState != AIState.Chase)
+            {
+                if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
+                    SoundManager.Instance.StopMusic(_chaseMusic);
+            }
+
             CurrentState = newState;
 
             switch (newState)
             {
                 case AIState.Idle:
                     _stateTimer = Random.Range(_idleTimeMin, _idleTimeMax);
+                    _impatienceGauge = 0f;
                     SafeSetDestination(transform.position);
                     break;
 
@@ -133,19 +150,31 @@ namespace SyntaxError.Enemy
                 case AIState.Stalk:
                     _stateTimer = _stalkWaitTime;
                     PickFlankPosition();
+
+                    if (SoundManager.Instance != null && !string.IsNullOrEmpty(_stalkStartSound) && _stalkSoundTimer <= 0f)
+                    {
+                        SoundManager.Instance.PlaySFX(_stalkStartSound);
+                        _stalkSoundTimer = _stalkSoundCooldown;
+                    }
                     break;
 
                 case AIState.Chase:
+                    _stateTimer = _maxChaseTime;
+                    SafeSetDestination(_playerTransform.position);
+
+                    if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
+                    {
+                        SoundManager.Instance.PlayMusic(_chaseMusic);
+                    }
                     break;
 
                 case AIState.Flee:
-                    _stateTimer = 5.0f;
+                    _stateTimer = 4.0f;
                     _currentStunTime = 0f;
                     PickFleePosition();
                     break;
             }
 
-            // รีเซ็ตความเร็วให้ตรงกับ State ใหม่
             UpdateAgentSpeed();
         }
 
@@ -166,7 +195,6 @@ namespace SyntaxError.Enemy
         {
             float baseSpeed = GetBaseSpeedForState(CurrentState);
 
-            // ถ้ากำลังโดนส่องไฟอยู่ ให้ความเร็วลดลง
             if (_currentStunTime > 0 && CurrentState != AIState.Flee)
             {
                 _agent.speed = baseSpeed * _stunSlowdownMultiplier;
@@ -179,26 +207,40 @@ namespace SyntaxError.Enemy
 
         private void HandleLightStunTimer(bool canSeePlayer, bool isLookingAtMe)
         {
+            if (CurrentState == AIState.Chase)
+            {
+                _currentStunTime = 0f;
+                UpdateAgentSpeed();
+                return;
+            }
+
             bool isLightStrongEnough = _playerFlashlight != null && _playerFlashlight.IsLightOn && _playerFlashlight.CurrentBattery >= _minBatteryToStun;
 
             if (isLookingAtMe && isLightStrongEnough && canSeePlayer)
             {
                 _currentStunTime += Time.deltaTime;
-                UpdateAgentSpeed(); // อัปเดตความเร็วให้ช้าลง
+                UpdateAgentSpeed();
             }
             else
             {
                 _currentStunTime = Mathf.Max(0, _currentStunTime - (Time.deltaTime * 2f));
-                UpdateAgentSpeed(); // คืนความเร็วปกติ
+                UpdateAgentSpeed();
             }
         }
 
         private void HandleStateMachine(float distance, bool canSee, bool canHear, bool isLookingAtMe)
         {
-            // ถ้าโดนไฟฉายสตั๊นจนครบ 4 วิ ให้วิ่งหนีทันที
-            if (_currentStunTime >= _timeToStun && CurrentState != AIState.Flee)
+            if (_currentStunTime >= _timeToStun && CurrentState != AIState.Flee && CurrentState != AIState.Chase)
             {
                 ChangeState(AIState.Flee);
+                return;
+            }
+
+            // 🛠️ แก้บั๊ก 1: เพิ่มเงื่อนไขว่าต้องอยู่ใกล้ๆ รัศมีการได้ยิน ถึงจะโกรธเสียงปั่นไฟฉาย
+            if (_playerInput.IsCranking && distance <= _crankHearingRadius && CurrentState != AIState.Chase && CurrentState != AIState.Flee)
+            {
+                _lastRollResult = "ได้ยินเสียงปั่นไฟฉาย! วิ่งชาร์จ!";
+                ChangeState(AIState.Chase);
                 return;
             }
 
@@ -229,7 +271,6 @@ namespace SyntaxError.Enemy
                     if (canHear) { ChangeState(AIState.Stalk); break; }
                     if (canSee && distance < 10f) { ChangeState(AIState.Chase); break; }
 
-                    // รอให้เดินถึงเป้าหมายก่อนค่อยนับเวลา
                     if (!_agent.pathPending && _agent.remainingDistance < 1.0f)
                     {
                         _stateTimer -= Time.deltaTime;
@@ -251,13 +292,19 @@ namespace SyntaxError.Enemy
                     break;
 
                 case AIState.Stalk:
-                    if (_playerInput.IsCranking || (canSee && distance < 6f)) { ChangeState(AIState.Chase); break; }
-                    if (!canHear && !canSee && !_agent.pathPending && _agent.remainingDistance < 1f && _stateTimer <= 0f)
+                    if (_impatienceGauge >= _maxImpatience)
                     {
-                        ChangeState(AIState.Idle); break; // คลาดกัน
+                        _lastRollResult = "เหยื่อเผลอแล้ว! วิ่งชาร์จ!";
+                        ChangeState(AIState.Chase);
+                        break;
                     }
 
-                    // รอให้ย่องถึงจุดดักซุ่มที่ตั้งไว้ก่อน ค่อยนับเวลาเพื่อดักรอหรือเปลี่ยนจุด
+                    if (canSee && distance < 6f) { ChangeState(AIState.Chase); break; }
+                    if (!canHear && !canSee && !_agent.pathPending && _agent.remainingDistance < 1f && _stateTimer <= 0f)
+                    {
+                        ChangeState(AIState.Idle); break;
+                    }
+
                     if (!_agent.pathPending && _agent.remainingDistance < 1.0f)
                     {
                         _stateTimer -= Time.deltaTime;
@@ -276,9 +323,8 @@ namespace SyntaxError.Enemy
                             }
                         }
                     }
-                    else if (distance > 20f)
+                    else if (distance > 18f)
                     {
-                        // ถ้าผู้เล่นวิ่งหนีไปไกลเกิน ให้คำนวณจุดดักซุ่มใหม่ทันที
                         PickFlankPosition();
                     }
                     break;
@@ -286,68 +332,129 @@ namespace SyntaxError.Enemy
                 case AIState.Chase:
                     SafeSetDestination(_playerTransform.position);
 
-                    if (_menaceGauge >= _maxMenace) ChangeState(AIState.Flee);
-                    else if (distance > 25f) ChangeState(AIState.Idle);
+                    _stateTimer -= Time.deltaTime;
+                    if (_stateTimer <= 0f)
+                    {
+                        // 🛠️ แก้บั๊ก 2: ถ้าวิ่งไล่จนหมดเวลา ให้ "วิ่งหนี (Flee)" ไปซ่อนตัว แทนการยืนนิ่งๆ โง่ๆ 
+                        _lastRollResult = "วิ่งไล่นานเกินไป ถอยไปตั้งหลักดีกว่า!";
+                        ChangeState(AIState.Flee);
+                        break;
+                    }
+
+                    if (distance > 25f) ChangeState(AIState.Idle);
                     break;
 
                 case AIState.Flee:
                     _stateTimer -= Time.deltaTime;
                     if (_stateTimer <= 0f)
                     {
-                        _menaceGauge = 0f;
+                        _impatienceGauge = 0f;
                         ChangeState(AIState.Idle);
                     }
                     break;
             }
         }
 
+        private void UpdateImpatienceGauge(float distance, bool isLookingAtMe)
+        {
+            if (CurrentState == AIState.Stalk && distance < 12f && !isLookingAtMe)
+            {
+                _impatienceGauge += (12f - distance) * Time.deltaTime * 4f;
+            }
+            else if (isLookingAtMe)
+            {
+                _impatienceGauge -= Time.deltaTime * 50f;
+            }
+            else
+            {
+                _impatienceGauge -= Time.deltaTime * 5f;
+            }
+
+            _impatienceGauge = Mathf.Clamp(_impatienceGauge, 0f, _maxImpatience);
+        }
+
         private void PickFlankPosition()
         {
-            // ปรับระยะ Stalk ให้ "ใกล้และกระชั้นชิดขึ้น" (จากเดิมไกล 8-15 เมตร เปลี่ยนเป็น 3-6 เมตร)
-            Vector3 flankPos = _playerTransform.position
-                             - (_playerTransform.forward * Random.Range(3f, 6f))
-                             + (_playerTransform.right * Random.Range(-5f, 5f));
+            bool foundValidSpot = false;
 
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(flankPos, out hit, 10f, NavMesh.AllAreas))
+            for (int i = 0; i < 3; i++)
             {
-                SafeSetDestination(hit.position);
+                Vector3 randomDir = Random.insideUnitSphere;
+                randomDir -= _playerTransform.forward;
+                randomDir.y = 0;
+
+                Vector3 flankPos = _playerTransform.position + (randomDir.normalized * Random.Range(4f, 8f));
+
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(flankPos, out hit, 4f, NavMesh.AllAreas))
+                {
+                    NavMeshPath path = new NavMeshPath();
+                    if (_agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete)
+                    {
+                        SafeSetDestination(hit.position);
+                        foundValidSpot = true;
+                        break;
+                    }
+                }
             }
+
+            if (!foundValidSpot) SafeSetDestination(_playerTransform.position);
         }
 
         private void PickFleePosition()
         {
-            Vector3 fleeDirection = -_playerCamera.forward;
-            Vector3 fleePos = transform.position + (fleeDirection * 20f) + (Random.insideUnitSphere * 5f);
+            bool foundValidSpot = false;
 
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(fleePos, out hit, 15f, NavMesh.AllAreas))
+            for (int i = 0; i < 3; i++)
             {
-                SafeSetDestination(hit.position);
+                Vector3 fleeDirection = -_playerCamera.forward;
+                fleeDirection += Random.insideUnitSphere * 0.5f;
+                fleeDirection.y = 0;
+
+                Vector3 fleePos = transform.position + (fleeDirection.normalized * Random.Range(15f, 25f));
+
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(fleePos, out hit, 5f, NavMesh.AllAreas))
+                {
+                    NavMeshPath path = new NavMeshPath();
+                    if (_agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete)
+                    {
+                        SafeSetDestination(hit.position);
+                        foundValidSpot = true;
+                        break;
+                    }
+                }
             }
+
+            if (!foundValidSpot) PatrolRandomly(transform.position, 15f);
         }
 
         private void PatrolRandomly(Vector3 origin, float radius)
         {
-            Vector3 randomDirection = Random.insideUnitSphere * radius;
-            randomDirection += origin;
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(randomDirection, out hit, radius, NavMesh.AllAreas))
+            bool foundValidSpot = false;
+            for (int i = 0; i < 3; i++)
             {
-                SafeSetDestination(hit.position);
+                Vector3 randomDirection = Random.insideUnitSphere * radius;
+                randomDirection += origin;
+
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(randomDirection, out hit, radius, NavMesh.AllAreas))
+                {
+                    NavMeshPath path = new NavMeshPath();
+                    if (_agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete)
+                    {
+                        SafeSetDestination(hit.position);
+                        foundValidSpot = true;
+                        break;
+                    }
+                }
             }
+            if (!foundValidSpot) SafeSetDestination(_playerTransform.position);
         }
 
         private void SafeSetDestination(Vector3 targetPos)
         {
             if (_agent != null && _agent.isOnNavMesh) _agent.SetDestination(targetPos);
-        }
-
-        private void UpdateMenaceGauge(float distance)
-        {
-            if (distance < 10f && CurrentState != AIState.Flee) _menaceGauge += (10f - distance) * Time.deltaTime * 2f;
-            else _menaceGauge -= Time.deltaTime * 3f;
-            _menaceGauge = Mathf.Clamp(_menaceGauge, 0f, _maxMenace);
         }
 
         private bool CheckIfPlayerLooking()
@@ -407,8 +514,6 @@ namespace SyntaxError.Enemy
         private void CatchPlayer()
         {
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
-            // _agent.isStopped = true;
-            // this.enabled = false;
         }
 
         private void UpdateDebugUI()
@@ -421,6 +526,8 @@ namespace SyntaxError.Enemy
             {
                 debugString += $"<color=orange>[RNG] {_lastRollResult}</color>\n";
             }
+
+            debugString += $"<color=red>Impatience: {_impatienceGauge:F0}%</color>\n";
 
             if (CurrentState == AIState.Flee)
             {
