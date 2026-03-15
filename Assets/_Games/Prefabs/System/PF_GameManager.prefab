@@ -222,6 +222,15 @@ MonoBehaviour:
   exhaustionUI: {fileID: 0}
   exhaustionPulseSpeed: 1
   maxExhaustionDarkness: 0.7
+  aiDebugText: {fileID: 0}
+  batteryCanvasGroup: {fileID: 0}
+  batteryBlocks:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  batteryFadeSpeed: 2
 --- !u!114 &1626192248556053624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,6 +245,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   totalItemsNeeded: 3
   _spawnPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
