@@ -44,11 +44,21 @@ namespace SyntaxError.Managers
 
         private Coroutine _exhaustionRoutine;
 
-        // ==========================================
-        // 🛠️ ส่วนที่เพิ่มใหม่: ระบบ Debug AI
-        // ==========================================
         [Header("Debug UI")]
         public TextMeshProUGUI aiDebugText;
+
+        [Header("Flashlight UI")]
+        [Tooltip("Canvas Group ที่ครอบหลอดแบตเตอรี่เอาไว้ (เพื่อเอาไว้ปรับ Alpha ตอน Fade)")]
+        public CanvasGroup batteryCanvasGroup;
+
+        [Tooltip("ก้อนแบตเตอรี่ทั้ง 5 ก้อน (ลาก Image มาใส่เรียงจากซ้ายไปขวา)")]
+        public GameObject[] batteryBlocks;
+
+        [Tooltip("ความเร็วในการ Fade หายไป")]
+        public float batteryFadeSpeed = 2f;
+
+        private Coroutine _batteryFadeRoutine;
+        private bool _isFlashlightOn = false;
 
         private void Awake()
         {
@@ -72,6 +82,7 @@ namespace SyntaxError.Managers
         {
             ShowMainMenu();
             UpdateLoopDisplay(0);
+            if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 0f;
         }
 
         private void ShowMainMenu()
@@ -311,6 +322,61 @@ namespace SyntaxError.Managers
             if (aiDebugText != null)
             {
                 aiDebugText.text = text;
+            }
+        }
+        public void UpdateBatteryUI(float current, float max)
+        {
+            if (batteryBlocks == null || batteryBlocks.Length == 0) return;
+
+            // คำนวณว่าควรติดกี่ก้อน (เช่น มี 5 ก้อน แบต 100% ก็ติด 5 ก้อน / แบต 20% ติด 1 ก้อน)
+            int activeBlocks = Mathf.CeilToInt((current / max) * batteryBlocks.Length);
+
+            for (int i = 0; i < batteryBlocks.Length; i++)
+            {
+                // เปิด/ปิด ก้อนแบตตามจำนวน activeBlocks
+                batteryBlocks[i].SetActive(i < activeBlocks);
+            }
+        }
+
+        public void SetFlashlightState(bool isOn)
+        {
+            _isFlashlightOn = isOn;
+            if (_batteryFadeRoutine != null) StopCoroutine(_batteryFadeRoutine);
+
+            if (isOn)
+            {
+                // ถ้าเปิดไฟฉาย ให้โชว์ UI ค้างไว้เลย 100%
+                if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 1f;
+            }
+            else
+            {
+                // ถ้าปิดไฟฉาย ให้เริ่มกระบวนการค่อยๆ Fade หายไป (Delay 0 วิ)
+                _batteryFadeRoutine = StartCoroutine(FadeBatteryOutRoutine(0f));
+            }
+        }
+
+        public void ShowBatteryTemp()
+        {
+            if (_isFlashlightOn) return; // ถ้าเปิดไฟฉายอยู่แล้ว UI มันโชว์ค้างอยู่ ไม่ต้องทำอะไร
+
+            if (_batteryFadeRoutine != null) StopCoroutine(_batteryFadeRoutine);
+
+            // ถ้าปิดไฟอยู่ แล้วกดปั่นไฟ ให้โชว์ขึ้นมาค้างไว้ 3 วินาที แล้วค่อย Fade หาย
+            _batteryFadeRoutine = StartCoroutine(FadeBatteryOutRoutine(3.0f));
+        }
+
+        private IEnumerator FadeBatteryOutRoutine(float delayBeforeFade)
+        {
+            if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 1f;
+
+            // โชว์ค้างไว้ตามเวลา Delay
+            yield return new WaitForSeconds(delayBeforeFade);
+
+            // ค่อยๆ ลด Alpha ลงจนเหลือ 0
+            while (batteryCanvasGroup != null && batteryCanvasGroup.alpha > 0f)
+            {
+                batteryCanvasGroup.alpha -= Time.deltaTime * batteryFadeSpeed;
+                yield return null;
             }
         }
     }

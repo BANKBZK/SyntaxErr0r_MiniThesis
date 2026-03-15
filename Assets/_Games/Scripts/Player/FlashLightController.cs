@@ -13,15 +13,14 @@ namespace SyntaxError.Player
         [SerializeField] private Transform _modelTransform;
 
         [Header("Dynamo / Battery Settings")]
-        [Tooltip("สถานะความตั้งใจว่าอยากเปิดไฟค้างไว้ไหม")]
         [SerializeField] private bool _wantsLightOn = false;
-
         [SerializeField] private float _maxBattery = 100f;
-
-        [Tooltip("แบตเตอรี่ลดลงวินาทีละเท่าไหร่ (ค่าน้อย = อยู่นานขึ้น แนะนำ 2.0f คืออยู่นาน 50 วินาที)")]
         [SerializeField] private float _drainRate = 2.0f;
 
-        // --- AI จะเห็นแสงไฟ ก็ต่อเมื่อตั้งใจเปิด และ แบตต้องไม่หมด ---
+        [Tooltip("ระยะเวลาดีเลย์ (วินาที) ก่อนที่จะกดปั่นไฟครั้งต่อไปได้")]
+        [SerializeField] private float _crankCooldown = 0.5f; // ปรับลงเหลือ 0.5 วิ จะได้กดปั่น 5 ทีติดกันได้ไม่รำคาญเกินไป
+        private float _crankTimer = 0f;
+
         public bool IsLightOn => _wantsLightOn && CurrentBattery > 0;
         public float CurrentBattery { get; private set; }
 
@@ -43,8 +42,6 @@ namespace SyntaxError.Player
         private Quaternion _initialRotation;
         private Vector3 _positionVelocity;
         private float _initialIntensity;
-
-        // ตัวเช็คการกดปั่นไฟแค่ครั้งเดียว (One-shot click)
         private bool _wasCranking = false;
 
         private void Start()
@@ -58,12 +55,19 @@ namespace SyntaxError.Player
             }
 
             _initialRotation = transform.localRotation;
-            CurrentBattery = _maxBattery;
+            CurrentBattery = _maxBattery; // เริ่มมาแบตเต็ม
 
             if (_lightSource != null)
             {
                 _initialIntensity = _lightSource.intensity;
                 _lightSource.enabled = IsLightOn;
+            }
+
+            // สั่งอัปเดต UI ตั้งแต่เริ่มเกม
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
+                UIManager.Instance.SetFlashlightState(IsLightOn);
             }
         }
 
@@ -77,37 +81,55 @@ namespace SyntaxError.Player
 
         private void HandleDynamoBattery()
         {
-            // 1. กดปั่นไฟ "ครั้งเดียว" (เช็คว่าเฟรมก่อนหน้านี้ยังไม่ได้กด) เพื่อชาร์จเต็ม 100% ทันที
-            if (_inputManager.IsCranking && !_wasCranking)
+            if (_crankTimer > 0f) _crankTimer -= Time.deltaTime;
+
+            // 1. ระบบกดปั่นไฟ (เพิ่ม 20% ต่อ 1 คลิก)
+            if (_inputManager.IsCranking && !_wasCranking && _crankTimer <= 0f)
             {
-                CurrentBattery = _maxBattery;
+                // บวกแบตเพิ่มทีละ 20%
+                CurrentBattery += (_maxBattery * 0.2f);
+                if (CurrentBattery > _maxBattery) CurrentBattery = _maxBattery;
+
+                _crankTimer = _crankCooldown;
 
                 if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX(_crankSoundName);
 
-                // ถ้าผู้เล่นเคยเปิดไฟค้างไว้ พอชาร์จปุ๊บให้ไฟติดขึ้นมาเองเลยไม่ต้องกด F ซ้ำ
-                if (_wantsLightOn && _lightSource != null)
+                // --- เรียกโชว์ UI แบตเตอรี่ ---
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
+                    UIManager.Instance.ShowBatteryTemp(); // โชว์ 3 วิ แล้วค่อย Fade
+                }
+
+                // ถ้าผู้เล่นเคยตั้งใจกดเปิดไฟค้างไว้ พอปั่นแบตมีแล้วไฟก็จะติดขึ้นมาเอง
+                if (_wantsLightOn && _lightSource != null && !_lightSource.enabled)
                 {
                     _lightSource.enabled = true;
+                    if (UIManager.Instance != null) UIManager.Instance.SetFlashlightState(true);
                 }
             }
 
-            // อัปเดตสถานะการกด
             _wasCranking = _inputManager.IsCranking;
 
-            // 2. แบตเตอรี่ลดลงเรื่อยๆ ถ้าไฟติดอยู่
+            // 2. ระบบแบตลด
             if (IsLightOn)
             {
                 CurrentBattery -= _drainRate * Time.deltaTime;
 
+                // อัปเดต UI แบตเตอรี่แบบเรียลไทม์ (หลอดจะค่อยๆ ลดทีละก้อน)
+                if (UIManager.Instance != null) UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
+
                 if (CurrentBattery <= 0)
                 {
                     CurrentBattery = 0;
-                    // ดับไฟฉายเพราะแบตหมด แต่ยังคงสถานะ _wantsLightOn ไว้อยู่
                     if (_lightSource != null) _lightSource.enabled = false;
+
+                    // แบตหมด ไฟดับ -> สั่ง UI ให้เริ่ม Fade หายไปเลย
+                    if (UIManager.Instance != null) UIManager.Instance.SetFlashlightState(false);
                 }
             }
 
-            // 3. หรี่ไฟและกะพริบเตือนตอนแบตใกล้จะหมด (เตือนล่วงหน้าที่ 20%)
+            // 3. หรี่ไฟตอนแบตใกล้หมด (เหลือ 1 ก้อนสุดท้าย)
             if (IsLightOn && _lightSource != null)
             {
                 float batteryPercent = CurrentBattery / _maxBattery;
@@ -131,13 +153,16 @@ namespace SyntaxError.Player
 
         private void ToggleLight()
         {
-            // สลับสถานะความตั้งใจว่าอยากเปิดหรือปิด
             _wantsLightOn = !_wantsLightOn;
-
-            // ไฟจะแสดงผลจริง ก็ต่อเมื่ออยากให้เปิด และ แบตต้องไม่เหลือ 0
             if (_lightSource != null) _lightSource.enabled = IsLightOn;
-
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX(_toggleSoundName);
+
+            // --- อัปเดต UI เวลาเปิด/ปิดไฟฉาย ---
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
+                UIManager.Instance.SetFlashlightState(IsLightOn);
+            }
         }
 
         private void HandleSway()

@@ -31,22 +31,15 @@ namespace SyntaxError.Enemy
         [Tooltip("ความฉลาด/ความดุ ของ AI (1-20) ยิ่งเยอะยิ่งขยับอ้อมหลังบ่อย")]
         [Range(1, 20)]
         [SerializeField] private int _aiLevel = 12;
-        private string _lastRollResult = ""; // เอาไว้โชว์บน Debug UI
+        private string _lastRollResult = "";
 
-        [Header("State Intervals (ระยะเวลาของแต่ละโหมด)")]
-        [Tooltip("เวลาที่ใช้นืนพัก (สั้นสุด)")]
+        [Header("State Intervals (เวลาดักรอเมื่อเดินถึงจุดหมาย)")]
         [SerializeField] private float _idleTimeMin = 1f;
         [SerializeField] private float _idleTimeMax = 3f;
+        [SerializeField] private float _patrolWaitTime = 2f; // รอ 2 วิ หลังเดินถึงจุด Patrol
+        [SerializeField] private float _stalkWaitTime = 3f;  // ซุ่มดักรอ 3 วิ หลังเดินอ้อมหลังสำเร็จ
 
-        [Tooltip("เวลาที่ใช้เดินสุ่มหา (ปานกลาง)")]
-        [SerializeField] private float _patrolTimeMin = 5f;
-        [SerializeField] private float _patrolTimeMax = 10f;
-
-        [Tooltip("เวลาที่ใช้แอบอ้อมหลัง (นานที่สุด)")]
-        [SerializeField] private float _stalkTimeMin = 10f;
-        [SerializeField] private float _stalkTimeMax = 15f;
-
-        private float _stateTimer = 0f; // ตัวนับเวลาถอยหลังของโหมดปัจจุบัน
+        private float _stateTimer = 0f;
 
         [Header("Director System (Menace Gauge)")]
         [SerializeField] private float _menaceGauge = 0f;
@@ -60,6 +53,8 @@ namespace SyntaxError.Enemy
         [Header("Light Stun Settings (ส่องไฟไล่ผี)")]
         [SerializeField] private float _timeToStun = 4.0f;
         [SerializeField] private float _minBatteryToStun = 50f;
+        [Tooltip("ตัวคูณความเร็วตอนโดนแสงไฟ (0.3 = ความเร็วเหลือ 30%)")]
+        [SerializeField] private float _stunSlowdownMultiplier = 0.3f;
         private float _currentStunTime = 0f;
 
         [Header("Hearing Settings (การได้ยิน)")]
@@ -93,8 +88,6 @@ namespace SyntaxError.Enemy
             if (_playerFlashlight == null) _playerFlashlight = FindFirstObjectByType<FlashlightController>();
 
             _lastPlayerPos = _playerTransform.position;
-
-            // เริ่มต้นด้วยการยืน Idle
             ChangeState(AIState.Idle);
         }
 
@@ -121,9 +114,6 @@ namespace SyntaxError.Enemy
             UpdateDebugUI();
         }
 
-        // ==========================================
-        // 🔄 ระบบเปลี่ยน State (จัดการเวลา)
-        // ==========================================
         private void ChangeState(AIState newState)
         {
             CurrentState = newState;
@@ -131,81 +121,105 @@ namespace SyntaxError.Enemy
             switch (newState)
             {
                 case AIState.Idle:
-                    _agent.speed = 0f;
-                    SafeSetDestination(transform.position); // หยุดเดิน
-                    _stateTimer = Random.Range(_idleTimeMin, _idleTimeMax); // สุ่มเวลาพักสั้นๆ
+                    _stateTimer = Random.Range(_idleTimeMin, _idleTimeMax);
+                    SafeSetDestination(transform.position);
                     break;
 
                 case AIState.Patrol:
-                    _agent.speed = _patrolSpeed;
-                    _stateTimer = Random.Range(_patrolTimeMin, _patrolTimeMax); // สุ่มเวลาเดินปานกลาง
+                    _stateTimer = _patrolWaitTime;
                     PatrolRandomly(transform.position, 15f);
                     break;
 
                 case AIState.Stalk:
-                    _agent.speed = _stalkSpeed;
-                    _stateTimer = Random.Range(_stalkTimeMin, _stalkTimeMax); // สุ่มเวลาแอบตามนานๆ
+                    _stateTimer = _stalkWaitTime;
                     PickFlankPosition();
                     break;
 
                 case AIState.Chase:
-                    _agent.speed = _chaseSpeed;
                     break;
 
                 case AIState.Flee:
-                    _agent.speed = _fleeSpeed;
-                    _stateTimer = 5.0f; // เวลาที่ใช้วิ่งหนี
+                    _stateTimer = 5.0f;
                     _currentStunTime = 0f;
                     PickFleePosition();
                     break;
             }
+
+            // รีเซ็ตความเร็วให้ตรงกับ State ใหม่
+            UpdateAgentSpeed();
         }
 
-        // ==========================================
-        // 🔦 ระบบ Stun 
-        // ==========================================
+        private float GetBaseSpeedForState(AIState state)
+        {
+            switch (state)
+            {
+                case AIState.Idle: return 0f;
+                case AIState.Patrol: return _patrolSpeed;
+                case AIState.Stalk: return _stalkSpeed;
+                case AIState.Chase: return _chaseSpeed;
+                case AIState.Flee: return _fleeSpeed;
+                default: return 0f;
+            }
+        }
+
+        private void UpdateAgentSpeed()
+        {
+            float baseSpeed = GetBaseSpeedForState(CurrentState);
+
+            // ถ้ากำลังโดนส่องไฟอยู่ ให้ความเร็วลดลง
+            if (_currentStunTime > 0 && CurrentState != AIState.Flee)
+            {
+                _agent.speed = baseSpeed * _stunSlowdownMultiplier;
+            }
+            else
+            {
+                _agent.speed = baseSpeed;
+            }
+        }
+
         private void HandleLightStunTimer(bool canSeePlayer, bool isLookingAtMe)
         {
             bool isLightStrongEnough = _playerFlashlight != null && _playerFlashlight.IsLightOn && _playerFlashlight.CurrentBattery >= _minBatteryToStun;
 
             if (isLookingAtMe && isLightStrongEnough && canSeePlayer)
             {
-                if (CurrentState == AIState.Stalk || CurrentState == AIState.Patrol) _agent.speed = 0f;
                 _currentStunTime += Time.deltaTime;
+                UpdateAgentSpeed(); // อัปเดตความเร็วให้ช้าลง
             }
             else
             {
                 _currentStunTime = Mathf.Max(0, _currentStunTime - (Time.deltaTime * 2f));
-                if (CurrentState == AIState.Stalk) _agent.speed = _stalkSpeed;
-                if (CurrentState == AIState.Patrol) _agent.speed = _patrolSpeed;
+                UpdateAgentSpeed(); // คืนความเร็วปกติ
             }
         }
 
-        // ==========================================
-        // 🧠 AI State Machine
-        // ==========================================
         private void HandleStateMachine(float distance, bool canSee, bool canHear, bool isLookingAtMe)
         {
+            // ถ้าโดนไฟฉายสตั๊นจนครบ 4 วิ ให้วิ่งหนีทันที
+            if (_currentStunTime >= _timeToStun && CurrentState != AIState.Flee)
+            {
+                ChangeState(AIState.Flee);
+                return;
+            }
+
             switch (CurrentState)
             {
                 case AIState.Idle:
-                    // โดนขัดจังหวะด้วยเสียงหรือการมองเห็น
                     if (canHear) { ChangeState(AIState.Stalk); break; }
                     if (canSee && distance < 10f) { ChangeState(AIState.Chase); break; }
 
-                    // นับเวลาถอยหลังจนกว่าจะสุ่มใหม่
                     _stateTimer -= Time.deltaTime;
                     if (_stateTimer <= 0f)
                     {
                         int roll = Random.Range(1, 21);
                         if (roll <= _aiLevel)
                         {
-                            _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: เลิกพัก.. ย่องไปดักหลัง!";
+                            _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: ย่องไปดักหลัง!";
                             ChangeState(AIState.Stalk);
                         }
                         else
                         {
-                            _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: เดินสุ่มตรวจตราปกติ";
+                            _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: เดินสุ่มปกติ";
                             ChangeState(AIState.Patrol);
                         }
                     }
@@ -215,54 +229,57 @@ namespace SyntaxError.Enemy
                     if (canHear) { ChangeState(AIState.Stalk); break; }
                     if (canSee && distance < 10f) { ChangeState(AIState.Chase); break; }
 
-                    // ถ้าเดินไปถึงจุดหมายก่อนหมดเวลา ให้สุ่มจุดเดินใหม่
-                    if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
+                    // รอให้เดินถึงเป้าหมายก่อนค่อยนับเวลา
+                    if (!_agent.pathPending && _agent.remainingDistance < 1.0f)
                     {
-                        PatrolRandomly(transform.position, 15f);
-                    }
-
-                    _stateTimer -= Time.deltaTime;
-                    if (_stateTimer <= 0f)
-                    {
-                        int roll = Random.Range(1, 21);
-                        if (roll <= _aiLevel)
+                        _stateTimer -= Time.deltaTime;
+                        if (_stateTimer <= 0f)
                         {
-                            _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: สบโอกาส เข้าโหมด Stalk!";
-                            ChangeState(AIState.Stalk);
-                        }
-                        else
-                        {
-                            _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: หยุดยืนพักเหนื่อย";
-                            ChangeState(AIState.Idle);
+                            int roll = Random.Range(1, 21);
+                            if (roll <= _aiLevel)
+                            {
+                                _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: เข้าโหมด Stalk!";
+                                ChangeState(AIState.Stalk);
+                            }
+                            else
+                            {
+                                _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: ยืนพักเหนื่อย";
+                                ChangeState(AIState.Idle);
+                            }
                         }
                     }
                     break;
 
                 case AIState.Stalk:
-                    if (_currentStunTime >= _timeToStun) { ChangeState(AIState.Flee); break; }
                     if (_playerInput.IsCranking || (canSee && distance < 6f)) { ChangeState(AIState.Chase); break; }
-                    if (!canHear && !canSee && _agent.remainingDistance < 1f) { ChangeState(AIState.Idle); break; } // คลาดกัน หาไม่เจอ
-
-                    // ถ้าเดินมาถึงจุดซุ่มก่อนเวลาหมด ให้ขยับหาจุดใหม่เรื่อยๆ
-                    if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
+                    if (!canHear && !canSee && !_agent.pathPending && _agent.remainingDistance < 1f && _stateTimer <= 0f)
                     {
-                        PickFlankPosition();
+                        ChangeState(AIState.Idle); break; // คลาดกัน
                     }
 
-                    _stateTimer -= Time.deltaTime;
-                    if (_stateTimer <= 0f)
+                    // รอให้ย่องถึงจุดดักซุ่มที่ตั้งไว้ก่อน ค่อยนับเวลาเพื่อดักรอหรือเปลี่ยนจุด
+                    if (!_agent.pathPending && _agent.remainingDistance < 1.0f)
                     {
-                        int roll = Random.Range(1, 21);
-                        if (roll <= _aiLevel)
+                        _stateTimer -= Time.deltaTime;
+                        if (_stateTimer <= 0f)
                         {
-                            _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: ตามซุ่มต่อ หาจุดใหม่!";
-                            ChangeState(AIState.Stalk); // เริ่มเวลา Stalk ใหม่
+                            int roll = Random.Range(1, 21);
+                            if (roll <= _aiLevel)
+                            {
+                                _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: แอบตามต่อ!";
+                                ChangeState(AIState.Stalk);
+                            }
+                            else
+                            {
+                                _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: เลิกตาม กลับไปพัก";
+                                ChangeState(AIState.Idle);
+                            }
                         }
-                        else
-                        {
-                            _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: เลิกตามแอบ กลับไปยืนพัก";
-                            ChangeState(AIState.Idle);
-                        }
+                    }
+                    else if (distance > 20f)
+                    {
+                        // ถ้าผู้เล่นวิ่งหนีไปไกลเกิน ให้คำนวณจุดดักซุ่มใหม่ทันที
+                        PickFlankPosition();
                     }
                     break;
 
@@ -270,8 +287,7 @@ namespace SyntaxError.Enemy
                     SafeSetDestination(_playerTransform.position);
 
                     if (_menaceGauge >= _maxMenace) ChangeState(AIState.Flee);
-                    else if (_currentStunTime >= _timeToStun) ChangeState(AIState.Flee);
-                    else if (distance > 25f) ChangeState(AIState.Idle); // วิ่งหลุดระยะแล้ว
+                    else if (distance > 25f) ChangeState(AIState.Idle);
                     break;
 
                 case AIState.Flee:
@@ -279,21 +295,18 @@ namespace SyntaxError.Enemy
                     if (_stateTimer <= 0f)
                     {
                         _menaceGauge = 0f;
-                        ChangeState(AIState.Idle); // หนีพ้นแล้วไปแอบยืนนิ่งๆ
+                        ChangeState(AIState.Idle);
                     }
                     break;
             }
         }
 
-        // ==========================================
-        // 📍 ฟังก์ชันคำนวณจุดเดิน (Flank, Flee, Patrol)
-        // ==========================================
         private void PickFlankPosition()
         {
-            // หาจุดอ้อมไปด้านหลัง หรือด้านข้างของผู้เล่น
+            // ปรับระยะ Stalk ให้ "ใกล้และกระชั้นชิดขึ้น" (จากเดิมไกล 8-15 เมตร เปลี่ยนเป็น 3-6 เมตร)
             Vector3 flankPos = _playerTransform.position
-                             - (_playerTransform.forward * Random.Range(8f, 15f))
-                             + (_playerTransform.right * Random.Range(-10f, 10f));
+                             - (_playerTransform.forward * Random.Range(3f, 6f))
+                             + (_playerTransform.right * Random.Range(-5f, 5f));
 
             NavMeshHit hit;
             if (NavMesh.SamplePosition(flankPos, out hit, 10f, NavMesh.AllAreas))
@@ -304,7 +317,6 @@ namespace SyntaxError.Enemy
 
         private void PickFleePosition()
         {
-            // หนีไปในทิศตรงข้ามกับที่ผู้เล่นมองอยู่
             Vector3 fleeDirection = -_playerCamera.forward;
             Vector3 fleePos = transform.position + (fleeDirection * 20f) + (Random.insideUnitSphere * 5f);
 
@@ -326,9 +338,6 @@ namespace SyntaxError.Enemy
             }
         }
 
-        // ==========================================
-        // 🛡️ Helper Methods
-        // ==========================================
         private void SafeSetDestination(Vector3 targetPos)
         {
             if (_agent != null && _agent.isOnNavMesh) _agent.SetDestination(targetPos);
@@ -398,8 +407,8 @@ namespace SyntaxError.Enemy
         private void CatchPlayer()
         {
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
-            //_agent.isStopped = true;
-            //this.enabled = false;
+            // _agent.isStopped = true;
+            // this.enabled = false;
         }
 
         private void UpdateDebugUI()
