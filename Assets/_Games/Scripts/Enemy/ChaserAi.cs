@@ -12,7 +12,8 @@ namespace SyntaxError.Enemy
         Patrol,
         Stalk,
         Chase,
-        Flee
+        Flee,
+        Scripted // โหมดแสดงละคร
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
@@ -84,6 +85,9 @@ namespace SyntaxError.Enemy
         private Vector3 _lastPlayerPos;
         private Vector3 _playerVelocity;
 
+        // ตัวแปรเช็คว่าแสดงละครจบแล้วให้หายไปไหม?
+        private bool _disappearAfterScript = false;
+
         private void Start()
         {
             _agent = GetComponent<NavMeshAgent>();
@@ -116,7 +120,7 @@ namespace SyntaxError.Enemy
             HandleLightStunTimer(canSeePlayer, isPlayerLookingAtMe);
             HandleStateMachine(distanceToPlayer, canSeePlayer, canHearPlayer, isPlayerLookingAtMe);
 
-            if (distanceToPlayer <= _killDistance && CurrentState != AIState.Flee)
+            if (distanceToPlayer <= _killDistance && CurrentState != AIState.Flee && CurrentState != AIState.Scripted)
             {
                 TryKillPlayer(distanceToPlayer);
             }
@@ -193,6 +197,8 @@ namespace SyntaxError.Enemy
 
         private void UpdateAgentSpeed()
         {
+            if (CurrentState == AIState.Scripted) return;
+
             float baseSpeed = GetBaseSpeedForState(CurrentState);
 
             if (_currentStunTime > 0 && CurrentState != AIState.Flee)
@@ -207,10 +213,10 @@ namespace SyntaxError.Enemy
 
         private void HandleLightStunTimer(bool canSeePlayer, bool isLookingAtMe)
         {
-            if (CurrentState == AIState.Chase)
+            if (CurrentState == AIState.Chase || CurrentState == AIState.Scripted)
             {
                 _currentStunTime = 0f;
-                UpdateAgentSpeed();
+                if (CurrentState != AIState.Scripted) UpdateAgentSpeed();
                 return;
             }
 
@@ -230,13 +236,31 @@ namespace SyntaxError.Enemy
 
         private void HandleStateMachine(float distance, bool canSee, bool canHear, bool isLookingAtMe)
         {
+            // 🎬 ระบบ Scripted State
+            if (CurrentState == AIState.Scripted)
+            {
+                if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
+                {
+                    if (_disappearAfterScript)
+                    {
+                        gameObject.SetActive(false); // หายตัวไป
+                    }
+                    else
+                    {
+                        // กลับมาล่าตามปกติ!
+                        _lastRollResult = "ละครจบแล้ว... เริ่มล่าเหยื่อต่อ!";
+                        ChangeState(AIState.Idle);
+                    }
+                }
+                return; // หยุดการคำนวณ State อื่นๆ ทั้งหมด
+            }
+
             if (_currentStunTime >= _timeToStun && CurrentState != AIState.Flee && CurrentState != AIState.Chase)
             {
                 ChangeState(AIState.Flee);
                 return;
             }
 
-            // 🛠️ แก้บั๊ก 1: เพิ่มเงื่อนไขว่าต้องอยู่ใกล้ๆ รัศมีการได้ยิน ถึงจะโกรธเสียงปั่นไฟฉาย
             if (_playerInput.IsCranking && distance <= _crankHearingRadius && CurrentState != AIState.Chase && CurrentState != AIState.Flee)
             {
                 _lastRollResult = "ได้ยินเสียงปั่นไฟฉาย! วิ่งชาร์จ!";
@@ -335,7 +359,6 @@ namespace SyntaxError.Enemy
                     _stateTimer -= Time.deltaTime;
                     if (_stateTimer <= 0f)
                     {
-                        // 🛠️ แก้บั๊ก 2: ถ้าวิ่งไล่จนหมดเวลา ให้ "วิ่งหนี (Flee)" ไปซ่อนตัว แทนการยืนนิ่งๆ โง่ๆ 
                         _lastRollResult = "วิ่งไล่นานเกินไป ถอยไปตั้งหลักดีกว่า!";
                         ChangeState(AIState.Flee);
                         break;
@@ -522,7 +545,7 @@ namespace SyntaxError.Enemy
 
             string debugString = $"<color=yellow>Enemy State: {CurrentState}</color>\n";
 
-            if (CurrentState == AIState.Stalk || CurrentState == AIState.Idle || CurrentState == AIState.Patrol)
+            if (CurrentState == AIState.Stalk || CurrentState == AIState.Idle || CurrentState == AIState.Patrol || CurrentState == AIState.Scripted)
             {
                 debugString += $"<color=orange>[RNG] {_lastRollResult}</color>\n";
             }
@@ -544,6 +567,26 @@ namespace SyntaxError.Enemy
             }
 
             Managers.UIManager.Instance.UpdateAIDebugText(debugString);
+        }
+
+        // ===============================================
+        // 🎬 ฟังก์ชันสำหรับรับคำสั่งจาก Zone Trigger
+        // ===============================================
+        public void PlayCinematicEvent(Vector3 spawnPoint, Vector3 destination, float walkSpeed, bool disappearAfter = false)
+        {
+            CurrentState = AIState.Scripted;
+            _disappearAfterScript = disappearAfter;
+            _lastRollResult = "กำลังเข้าฉาก Cinematic...";
+
+            if (_agent != null)
+            {
+                _agent.Warp(spawnPoint);
+                _agent.speed = walkSpeed;
+                _agent.SetDestination(destination);
+            }
+
+            _currentStunTime = 0f;
+            _impatienceGauge = 0f;
         }
     }
 }
