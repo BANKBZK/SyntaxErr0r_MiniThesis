@@ -238,10 +238,9 @@ namespace SyntaxError.Enemy
                 if (CurrentState != AIState.Scripted) UpdateAgentSpeed();
                 return;
             }
-
             bool isLightStrongEnough = _playerFlashlight != null && _playerFlashlight.IsLightOn && _playerFlashlight.CurrentBattery >= _minBatteryToStun;
 
-            if (isLookingAtMe && isLightStrongEnough && canSeePlayer)
+            if (isLightStrongEnough && canSeePlayer)
             {
                 _currentStunTime += Time.deltaTime;
                 UpdateAgentSpeed();
