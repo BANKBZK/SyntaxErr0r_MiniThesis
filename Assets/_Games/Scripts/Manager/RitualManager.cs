@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using SyntaxError.Managers; // เพื่อเรียกใช้ SoundManager / UIManager
+using SyntaxError.Managers;
 
 namespace SyntaxError.Ritual
 {
@@ -8,14 +8,17 @@ namespace SyntaxError.Ritual
     {
         public static RitualManager Instance { get; private set; }
 
+        [Header("Zone Control (Performance)")]
+        [Tooltip("ลาก GameObject ของผี Chaser AI มาใส่")]
+        [SerializeField] private GameObject _chaserAI;
+        [Tooltip("ลาก GameObject แม่ที่คลุมของในฉาก Ritual (กำแพง, ไฟ, ฯลฯ) มาใส่")]
+        [SerializeField] private GameObject _ritualZoneEnvironment;
+
         [Header("Ritual Setup")]
         public int totalItemsNeeded = 3;
 
         [Header("Random Spawning")]
-        [Tooltip("จุดเกิดทั้งหมดในแมพ (ควรสร้าง Empty GameObject วางตามพื้นแล้วลากมาใส่ แนะนำ 5-10 จุด)")]
         [SerializeField] private List<Transform> _spawnPoints;
-
-        [Tooltip("โมเดลไอเทมทั้ง 3 ชิ้นในฉาก (ลากมาใส่ตรงนี้)")]
         [SerializeField] private List<GameObject> _ritualItems;
 
         [Header("Current Status (Read Only)")]
@@ -29,34 +32,53 @@ namespace SyntaxError.Ritual
 
         private void Start()
         {
-            // เริ่มเกมมาให้ซ่อนของไหว้ไปก่อน
+            // เริ่มเกมมา ซ่อนของไหว้ และ ปิดการทำงานโซน Ritual ทิ้งเพื่อประหยัดพลังงาน
             foreach (var item in _ritualItems)
             {
                 if (item != null) item.SetActive(false);
             }
+
+            EndRitualPhase(); // ปิดโซนไว้ก่อน
         }
 
-        // ฟังก์ชันนี้จะถูกเรียกโดย LoopManager ตอนที่วาร์ปผู้เล่นมาถึงด่านหนีผี
+        // เรียกตอนเข้าโซน Ritual (LoopManager สั่ง)
         public void SetupRitualPhase()
         {
             _itemsHolding = 0;
             _itemsPlaced = 0;
             RandomizeItemSpawns();
-            Debug.Log("<color=orange>[RitualManager] เริ่มช่วงพิธีกรรม! สุ่มจุดเกิดไอเทมเรียบร้อย</color>");
+
+            // เปิดการทำงานของ Zone และ AI
+            if (_ritualZoneEnvironment != null) _ritualZoneEnvironment.SetActive(true);
+            if (_chaserAI != null) _chaserAI.SetActive(true);
+
+            Debug.Log("<color=orange>[RitualManager] เริ่มช่วงพิธีกรรม! เปิดการทำงานโซนและ AI</color>");
+        }
+
+        // เรียกเพื่อเคลียร์โซน ปิดผี (เช่น ตอนโดนฆ่า หรือ จบเกม หรือตอบผิด)
+        public void EndRitualPhase()
+        {
+            // ปิดการทำงานของ Zone และ AI
+            if (_ritualZoneEnvironment != null) _ritualZoneEnvironment.SetActive(false);
+            if (_chaserAI != null) _chaserAI.SetActive(false);
+
+            // หยุดเสียงเพลงไล่ล่าเผื่อมันค้างอยู่
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.StopMusic("ChaseTheme");
+            }
         }
 
         private void RandomizeItemSpawns()
         {
+            // (โค้ดเดิมของคุณที่ใช้สุ่มเกิดไอเทม ไม่ต้องแก้)
             if (_spawnPoints.Count < _ritualItems.Count)
             {
                 Debug.LogError("[Ritual] มีจุด Spawn น้อยกว่าจำนวนไอเทม! กรุณาเพิ่มจุดเกิดใน Inspector");
                 return;
             }
 
-            // 1. ก๊อปปี้ลิสต์จุดเกิดมา เพื่อเอามาสับเปลี่ยน (Shuffle)
             List<Transform> availableSpawns = new List<Transform>(_spawnPoints);
-
-            // 2. สับเปลี่ยนตำแหน่งใน List (เทคนิค Fisher-Yates Shuffle)
             for (int i = 0; i < availableSpawns.Count; i++)
             {
                 Transform temp = availableSpawns[i];
@@ -65,15 +87,13 @@ namespace SyntaxError.Ritual
                 availableSpawns[randomIndex] = temp;
             }
 
-            // 3. เอาไอเทมไปวางตามจุดที่ถูกสุ่มขึ้นมา (เอาแค่ 3 จุดแรกของลิสต์ที่สับแล้ว)
             for (int i = 0; i < _ritualItems.Count; i++)
             {
                 if (_ritualItems[i] != null)
                 {
                     _ritualItems[i].transform.position = availableSpawns[i].position;
-                    // ถ้าอยากให้ของวางเอียงตามพื้นด้วย ให้ใช้ rotation ของจุดเกิด
                     _ritualItems[i].transform.rotation = availableSpawns[i].rotation;
-                    _ritualItems[i].SetActive(true); // เปิดให้ผู้เล่นมองเห็น
+                    _ritualItems[i].SetActive(true);
                 }
             }
         }
@@ -82,7 +102,6 @@ namespace SyntaxError.Ritual
         {
             _itemsHolding++;
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("PickupItem");
-            Debug.Log($"[Ritual] เก็บของแล้ว! ถืออยู่: {_itemsHolding} ชิ้น");
         }
 
         public bool TryPlaceItems()
@@ -93,31 +112,18 @@ namespace SyntaxError.Ritual
                 _itemsHolding = 0;
 
                 if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("PlaceItem");
-                Debug.Log($"[Ritual] วางของแล้ว! รวมวางไป: {_itemsPlaced}/{totalItemsNeeded}");
-
                 CheckWinCondition();
-                return true; // วางสำเร็จ
+                return true;
             }
-            return false; // ไม่มีของในมือ
+            return false;
         }
 
         private void CheckWinCondition()
         {
             if (_itemsPlaced >= totalItemsNeeded)
             {
-                // บันทึกความจำลง GameManager ว่าทำ Side Quest สำเร็จแล้ว!
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.IsRitualComplete = true;
-                }
-
-                Debug.Log("<color=green>พิธีกรรมสมบูรณ์! รีบหาทางออกเพื่อหนีกลับโรงเรียนเร็ว!</color>");
-
-                // (Optional) สั่งโชว์ Text กลางจอใบ้ให้ผู้เล่นรู้ว่าต้องออก
-                if (UIManager.Instance != null)
-                {
-                    UIManager.Instance.ShowStoryText("The ritual is complete... Find the exit!", 4f);
-                }
+                if (GameManager.Instance != null) GameManager.Instance.IsRitualComplete = true;
+                if (UIManager.Instance != null) UIManager.Instance.ShowStoryText("The ritual is complete... Find the exit!", 4f);
             }
         }
 

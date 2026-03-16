@@ -84,7 +84,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 50
+  _chance: 55
   _safeLoops: 0000000004000000
   _allAnomalies:
   - {fileID: 0}
@@ -249,6 +249,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 149a1c073ddac0d408c3629a5789b172, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _chaserAI: {fileID: 0}
+  _ritualZoneEnvironment: {fileID: 0}
   totalItemsNeeded: 3
   _spawnPoints:
   - {fileID: 0}

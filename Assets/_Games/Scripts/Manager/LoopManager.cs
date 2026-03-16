@@ -128,7 +128,7 @@ namespace SyntaxError.Managers
                 PlayerController pController = _characterController.GetComponent<PlayerController>();
                 if (pController != null) pController.SetSprintAbility(true);
 
-                // 3. เริ่มระบบหาของไหว้ (สุ่มเกิดไอเทม)
+                // 3. เริ่มระบบหาของไหว้ (สุ่มเกิดไอเทม และเปิดโซน Ritual)
                 if (RitualManager.Instance != null) RitualManager.Instance.SetupRitualPhase();
 
                 Debug.Log("<color=red>Entering Ritual Phase! วิ่งงงง!!</color>");
@@ -139,9 +139,12 @@ namespace SyntaxError.Managers
                 _playerTransform.position = _startPoint.position;
                 _playerTransform.rotation = _startPoint.rotation;
 
-                // ล็อกไม่ให้วิ่ง (เผื่อเพิ่งตายกลับมาจากด่าน Ritual จะได้โดนริบความสามารถวิ่งคืน)
+                // ล็อกไม่ให้วิ่ง
                 PlayerController pController = _characterController.GetComponent<PlayerController>();
                 if (pController != null) pController.SetSprintAbility(false);
+
+                // **[เพิ่ม] ปิดระบบโซน Ritual เผื่อเพิ่งกลับออกมาจากด่านหนีผี**
+                if (RitualManager.Instance != null) RitualManager.Instance.EndRitualPhase();
             }
             // ==========================================
 

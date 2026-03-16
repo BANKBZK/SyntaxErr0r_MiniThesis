@@ -35,38 +35,30 @@ namespace SyntaxError.Interaction
 
         private void OnTriggerEnter(Collider other)
         {
-            // ถ้าเคยชนแล้ว หรือไม่ใช่ Player ให้ข้ามไป
             if (_hasTriggered || !other.CompareTag("Player")) return;
 
             _hasTriggered = true;
 
             if (_ghostAI != null)
             {
-                // 1. เปิดสวิตช์ปลุกผีให้ตื่น!
+                // เปิด Object (ถ้ามันปิดอยู่)
                 _ghostAI.gameObject.SetActive(true);
 
-                // 2. เช็คว่าตั้งค่าให้ทำอะไร
                 if (_action == ZoneAction.CinematicThenHunt)
                 {
-                    // เดินผ่านหน้า แล้วสลับไปล่าต่อ
                     _ghostAI.PlayCinematicEvent(_spawnPoint.position, _destinationPoint.position, _walkSpeed, false);
                 }
                 else if (_action == ZoneAction.CinematicThenDisappear)
                 {
-                    // เดินผ่านหน้า แล้วหายวับไปเลย
                     _ghostAI.PlayCinematicEvent(_spawnPoint.position, _destinationPoint.position, _walkSpeed, true);
                 }
                 else if (_action == ZoneAction.WakeUpAndHunt)
                 {
-                    // ปลุกเฉยๆ ถ้าระบุจุดเกิดก็วาร์ปไปตรงนั้น
-                    if (_spawnPoint != null)
-                    {
-                        _ghostAI.GetComponent<UnityEngine.AI.NavMeshAgent>().Warp(_spawnPoint.position);
-                    }
-                    // มันจะเริ่มล่าจากสถานะ Idle อัตโนมัติ
+                    // ใช้ฟังก์ชัน WakeUp ปลุก AI ขึ้นมา
+                    Vector3? targetPos = _spawnPoint != null ? _spawnPoint.position : (Vector3?)null;
+                    _ghostAI.WakeUp(targetPos);
                 }
 
-                // 3. เล่นเสียงเอฟเฟกต์ตกใจ
                 if (SoundManager.Instance != null && !string.IsNullOrEmpty(_jumpscareSound))
                 {
                     SoundManager.Instance.PlaySFX(_jumpscareSound);

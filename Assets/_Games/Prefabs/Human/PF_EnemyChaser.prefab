@@ -228,15 +228,15 @@ MonoBehaviour:
   _playerInput: {fileID: 0}
   _playerFlashlight: {fileID: 0}
   CurrentState: 0
-  _aiLevel: 6
+  _aiLevel: 8
   _idleTimeMin: 2
   _idleTimeMax: 4
   _patrolWaitTime: 2
   _stalkWaitTime: 0.8
   _impatienceGauge: 0
   _maxImpatience: 100
-  _sightRadiusDark: 5
-  _sightRadiusLight: 15
+  _sightRadiusDark: 8
+  _sightRadiusLight: 20
   _obstacleMask:
     serializedVersion: 2
     m_Bits: 128
@@ -244,19 +244,20 @@ MonoBehaviour:
   _minBatteryToStun: 40
   _stunSlowdownMultiplier: 0.1
   _crankHearingRadius: 25
-  _sprintHearingRadius: 10
-  _walkHearingRadius: 8
+  _sprintHearingRadius: 15
+  _walkHearingRadius: 10
   _stalkStartSound: GhostWhisper
   _chaseMusic: ChaseTheme
   _stalkSoundCooldown: 15
   _patrolSpeed: 3
-  _stalkSpeed: 3.5
+  _stalkSpeed: 5
   _chaseSpeed: 6
   _fleeSpeed: 8
-  _killDistance: 1
+  _killDistance: 1.5
   _maxChaseTime: 6
   _turnSpeed: 150
   _acceleration: 6
+  _startDormant: 1
 --- !u!1 &7937036904709102133
 GameObject:
   m_ObjectHideFlags: 0

@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _inputManager: {fileID: 5697490404761585134}
   _playerBody: {fileID: 2356573982295926130}
-  _mouseSensitivity: 0.3
+  _mouseSensitivity: 0.1
   _topClamp: -90
   _bottomClamp: 80
 --- !u!1 &1692310073669532078
@@ -616,6 +616,7 @@ MonoBehaviour:
   _wantsLightOn: 0
   _maxBattery: 100
   _drainRate: 8
+  _crankCooldown: 1.5
   _toggleSoundName: Click
   _crankSoundName: FlashlightCrank
   _swaySpeed: 5

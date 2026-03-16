@@ -140,6 +140,10 @@ namespace SyntaxError.Player
                 _currentStamina = _maxStamina;
                 _isExhausted = false;
             }
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ToggleExhaustionEffect(false);
+            }
         }
     }
 }

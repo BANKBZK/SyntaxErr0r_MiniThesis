@@ -8,12 +8,13 @@ namespace SyntaxError.Enemy
 {
     public enum AIState
     {
+        Dormant,
         Idle,
         Patrol,
         Stalk,
         Chase,
         Flee,
-        Scripted // โหมดแสดงละคร
+        Scripted
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
@@ -82,6 +83,10 @@ namespace SyntaxError.Enemy
         [SerializeField] private float _turnSpeed = 150f;
         [SerializeField] private float _acceleration = 6f;
 
+        [Header("Spawn Settings")]
+        [Tooltip("ถ้าติ๊กถูก เริ่มมาผีจะยืนนิ่งๆ ไม่มี AI จนกว่าจะถูก Event Trigger ปลุก")]
+        [SerializeField] private bool _startDormant = false;
+
         private Vector3 _lastPlayerPos;
         private Vector3 _playerVelocity;
 
@@ -100,7 +105,16 @@ namespace SyntaxError.Enemy
             if (_playerFlashlight == null) _playerFlashlight = FindFirstObjectByType<FlashlightController>();
 
             _lastPlayerPos = _playerTransform.position;
-            ChangeState(AIState.Idle);
+
+            // 2. เช็คว่าให้เริ่มมาแบบหลับ หรือแบบตื่น
+            if (_startDormant)
+            {
+                ChangeState(AIState.Dormant);
+            }
+            else
+            {
+                ChangeState(AIState.Idle);
+            }
         }
 
         private void Update()
@@ -140,10 +154,15 @@ namespace SyntaxError.Enemy
 
             switch (newState)
             {
+                case AIState.Dormant:
+                    // สั่งให้หยุดนิ่ง ไม่ต้องตั้งเวลาอะไรทั้งสิ้น
+                    if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = true;
+                    break;
+
                 case AIState.Idle:
+                    // เวลาตื่น ต้องปลดล็อกการเดินด้วย
+                    if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = false;
                     _stateTimer = Random.Range(_idleTimeMin, _idleTimeMax);
-                    _impatienceGauge = 0f;
-                    SafeSetDestination(transform.position);
                     break;
 
                 case AIState.Patrol:
@@ -237,19 +256,29 @@ namespace SyntaxError.Enemy
         private void HandleStateMachine(float distance, bool canSee, bool canHear, bool isLookingAtMe)
         {
             // 🎬 ระบบ Scripted State
+            if (CurrentState == AIState.Dormant) return;
             if (CurrentState == AIState.Scripted)
             {
-                if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
+                // นับถอยหลัง Safety Timer
+                if (_stateTimer > 0f)
                 {
-                    if (_disappearAfterScript)
+                    _stateTimer -= Time.deltaTime;
+                }
+                else
+                {
+                    // พอหมดเวลา Safety Timer ค่อยเริ่มเช็คว่าเดินถึงจุดหมายหรือยัง
+                    if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
                     {
-                        gameObject.SetActive(false); // หายตัวไป
-                    }
-                    else
-                    {
-                        // กลับมาล่าตามปกติ!
-                        _lastRollResult = "ละครจบแล้ว... เริ่มล่าเหยื่อต่อ!";
-                        ChangeState(AIState.Idle);
+                        if (_disappearAfterScript)
+                        {
+                            gameObject.SetActive(false); // หายตัวไป
+                        }
+                        else
+                        {
+                            // กลับมาล่าตามปกติ!
+                            _lastRollResult = "ละครจบแล้ว... เริ่มล่าเหยื่อต่อ!";
+                            ChangeState(AIState.Idle);
+                        }
                     }
                 }
                 return; // หยุดการคำนวณ State อื่นๆ ทั้งหมด
@@ -539,6 +568,50 @@ namespace SyntaxError.Enemy
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
         }
 
+        public void WakeUp(Vector3? warpPos = null)
+        {
+            if (warpPos.HasValue && _agent != null)
+            {
+                _agent.enabled = false;
+                transform.position = warpPos.Value;
+                _agent.enabled = true;
+            }
+
+            _lastRollResult = "ถูกปลุกให้ตื่นแล้ว เริ่มล่า!";
+            ChangeState(AIState.Idle);
+        }
+        // ===============================================
+        // 🎬 ฟังก์ชันสำหรับรับคำสั่งจาก Zone Trigger
+        // ===============================================
+        public void PlayCinematicEvent(Vector3 spawnPoint, Vector3 destination, float walkSpeed, bool disappearAfter = false)
+        {
+            CurrentState = AIState.Scripted;
+            _disappearAfterScript = disappearAfter;
+            _lastRollResult = "กำลังเข้าฉาก Cinematic...";
+
+            // ตั้งเวลาดีเลย์ 0.5 วินาที ให้ NavMesh โหลดเส้นทางให้เสร็จก่อน
+            _stateTimer = 0.5f;
+
+            if (_agent != null)
+            {
+                _agent.enabled = false;
+                transform.position = spawnPoint;
+                _agent.enabled = true;
+
+                // สแกนหาพื้น NavMesh ที่ใกล้จุดเกิดที่สุด (กันบั๊กจุดเกิดลอยฟ้าหรือจมดิน)
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(spawnPoint, out hit, 2f, NavMesh.AllAreas))
+                {
+                    _agent.Warp(hit.position);
+                }
+
+                _agent.speed = walkSpeed;
+                _agent.SetDestination(destination);
+            }
+
+            _currentStunTime = 0f;
+            _impatienceGauge = 0f;
+        }
         private void UpdateDebugUI()
         {
             if (Managers.UIManager.Instance == null) return;
@@ -567,26 +640,6 @@ namespace SyntaxError.Enemy
             }
 
             Managers.UIManager.Instance.UpdateAIDebugText(debugString);
-        }
-
-        // ===============================================
-        // 🎬 ฟังก์ชันสำหรับรับคำสั่งจาก Zone Trigger
-        // ===============================================
-        public void PlayCinematicEvent(Vector3 spawnPoint, Vector3 destination, float walkSpeed, bool disappearAfter = false)
-        {
-            CurrentState = AIState.Scripted;
-            _disappearAfterScript = disappearAfter;
-            _lastRollResult = "กำลังเข้าฉาก Cinematic...";
-
-            if (_agent != null)
-            {
-                _agent.Warp(spawnPoint);
-                _agent.speed = walkSpeed;
-                _agent.SetDestination(destination);
-            }
-
-            _currentStunTime = 0f;
-            _impatienceGauge = 0f;
         }
     }
 }
