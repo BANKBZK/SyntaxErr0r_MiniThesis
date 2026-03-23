@@ -5,6 +5,7 @@ using SyntaxError.Interfaces;
 using SyntaxError.Player;
 using SyntaxError.Interaction;
 using SyntaxError.Ritual;
+using UnityEngine.SceneManagement;
 
 namespace SyntaxError.Managers
 {
@@ -34,6 +35,9 @@ namespace SyntaxError.Managers
         [Header("Ending Settings")]
         [Tooltip("Loop สุดท้ายที่จะตัดสินจบเกม (เช่น 8)")]
         [SerializeField] private int _finalLoopTrigger = 8;
+        public int trueEndingScene;
+        public int falseEndingScene;
+
 
         private List<IResettable> _resettableObjects = new List<IResettable>();
         private bool _isTeleporting = false;
@@ -85,11 +89,13 @@ namespace SyntaxError.Managers
                         if (GameManager.Instance.IsRitualComplete)
                         {
                             Debug.Log("<color=yellow>=== TRUE ENDING ===</color>");
+                            SceneManager.LoadScene(trueEndingScene);
                             // เรียกหน้าจอชนะ หรือพาไปฉาก True Ending
                         }
                         else
                         {
                             Debug.Log("<color=red>=== BAD ENDING ===</color>");
+                            SceneManager.LoadScene(falseEndingScene);
                             // TODO: เดี๋ยวนายทำหน้า Bad Ending หรือให้ผีมากระโดดงับหัวตรงนี้ได้เลย!
                             // ถ้ายังไม่มีชั่วคราว ก็ให้เรียก ShowWinScreen ไปก่อน หรือสร้างฟังก์ชัน ShowBadEnding() ใน UIManager ครับ
                         }
