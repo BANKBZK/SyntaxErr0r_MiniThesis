@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 using TMPro;
 using System.Collections;
 using SyntaxError.Inputs;
+using UnityEngine.SceneManagement; // เพิ่มการจัดการ Scene
+using SyntaxError.Story;           // เพิ่มเพื่อเรียกใช้ StoryTrigger
 
 namespace SyntaxError.Managers
 {
@@ -10,8 +12,11 @@ namespace SyntaxError.Managers
     {
         public static UIManager Instance { get; private set; }
 
+        [Header("Scene Management")]
+        [Tooltip("ชื่อ Scene หลักของเกมเพื่อใช้ตอนกดกลับ Main Menu")]
+        public string mainSceneName = "MainScene";
+
         [Header("Player Control")]
-        [Tooltip("ลากตัว Player ที่มี InputManager มาใส่ เพื่อใช้เปิด/ปิดการควบคุม")]
         [SerializeField] private InputManager _playerInput;
 
         [Header("UI Panels")]
@@ -41,20 +46,14 @@ namespace SyntaxError.Managers
         public CanvasGroup exhaustionUI;
         public float exhaustionPulseSpeed = 2f;
         public float maxExhaustionDarkness = 0.7f;
-
         private Coroutine _exhaustionRoutine;
 
         [Header("Debug UI")]
         public TextMeshProUGUI aiDebugText;
 
         [Header("Flashlight UI")]
-        [Tooltip("Canvas Group ที่ครอบหลอดแบตเตอรี่เอาไว้ (เพื่อเอาไว้ปรับ Alpha ตอน Fade)")]
         public CanvasGroup batteryCanvasGroup;
-
-        [Tooltip("ก้อนแบตเตอรี่ทั้ง 5 ก้อน (ลาก Image มาใส่เรียงจากซ้ายไปขวา)")]
         public GameObject[] batteryBlocks;
-
-        [Tooltip("ความเร็วในการ Fade หายไป")]
         public float batteryFadeSpeed = 2f;
 
         private Coroutine _batteryFadeRoutine;
@@ -203,6 +202,38 @@ namespace SyntaxError.Managers
             Debug.Log("Game Exited");
         }
 
+        // ==========================================
+        // 🔄 ระบบกดกลับหน้า Main Menu (ทำ Hard Reset)
+        // ==========================================
+        public void OnReturnToMainMenu()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+
+            // 1. คืนค่าเวลาให้เดินปกติ (เพราะตอน Pause ค่า TimeScale มันเป็น 0 เกมจะค้าง)
+            Time.timeScale = 1f;
+
+            // 2. ล้างความทรงจำเนื้อเรื่อง
+            StoryTrigger.ResetAllStoryMemory();
+
+            // 3. ทำลายก้อน Manager ทิ้งเหมือนใน EndingSequence 
+            // (เผื่อว่าผู้เล่นกำลังโดนผีไล่ล่า หรือกดออกมาจากฉาก Ritual)
+            GameObject managersObj = GameObject.Find("--- MANAGERS ---");
+            if (managersObj != null)
+            {
+                Destroy(managersObj);
+            }
+            else
+            {
+                // ถ้าไม่ได้รวมในก้อนเดียว ก็สั่งทำลายทีละตัวที่ DontDestroyOnLoad
+                if (GameManager.Instance != null) Destroy(GameManager.Instance.gameObject);
+                if (LoopManager.Instance != null) Destroy(LoopManager.Instance.gameObject);
+                if (SoundManager.Instance != null) Destroy(SoundManager.Instance.gameObject);
+            }
+
+            // 4. โหลดฉาก Main Menu ขึ้นมาใหม่หมดตั้งแต่ศูนย์
+            SceneManager.LoadScene(mainSceneName);
+        }
+
         private void SetCursorState(bool visible)
         {
             Cursor.visible = visible;
@@ -229,9 +260,6 @@ namespace SyntaxError.Managers
             if (loopText != null) loopText.text = $"Loop : {currentLoop}";
         }
 
-        // ==========================================
-        // Story System
-        // ==========================================
         public void ShowStoryText(string text, float duration)
         {
             StopAllCoroutines();
@@ -272,9 +300,6 @@ namespace SyntaxError.Managers
             storyText.gameObject.SetActive(false);
         }
 
-        // ==========================================
-        // Exhaustion System
-        // ==========================================
         public void ToggleExhaustionEffect(bool isExhausted)
         {
             if (isExhausted)
@@ -314,9 +339,6 @@ namespace SyntaxError.Managers
             }
         }
 
-        // ==========================================
-        // 🛠️ ฟังก์ชันเรียกอัปเดต Debug ข้อความผี
-        // ==========================================
         public void UpdateAIDebugText(string text)
         {
             if (aiDebugText != null)
@@ -324,16 +346,15 @@ namespace SyntaxError.Managers
                 aiDebugText.text = text;
             }
         }
+
         public void UpdateBatteryUI(float current, float max)
         {
             if (batteryBlocks == null || batteryBlocks.Length == 0) return;
 
-            // คำนวณว่าควรติดกี่ก้อน (เช่น มี 5 ก้อน แบต 100% ก็ติด 5 ก้อน / แบต 20% ติด 1 ก้อน)
             int activeBlocks = Mathf.CeilToInt((current / max) * batteryBlocks.Length);
 
             for (int i = 0; i < batteryBlocks.Length; i++)
             {
-                // เปิด/ปิด ก้อนแบตตามจำนวน activeBlocks
                 batteryBlocks[i].SetActive(i < activeBlocks);
             }
         }
@@ -345,23 +366,20 @@ namespace SyntaxError.Managers
 
             if (isOn)
             {
-                // ถ้าเปิดไฟฉาย ให้โชว์ UI ค้างไว้เลย 100%
                 if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 1f;
             }
             else
             {
-                // ถ้าปิดไฟฉาย ให้เริ่มกระบวนการค่อยๆ Fade หายไป (Delay 0 วิ)
                 _batteryFadeRoutine = StartCoroutine(FadeBatteryOutRoutine(0f));
             }
         }
 
         public void ShowBatteryTemp()
         {
-            if (_isFlashlightOn) return; // ถ้าเปิดไฟฉายอยู่แล้ว UI มันโชว์ค้างอยู่ ไม่ต้องทำอะไร
+            if (_isFlashlightOn) return;
 
             if (_batteryFadeRoutine != null) StopCoroutine(_batteryFadeRoutine);
 
-            // ถ้าปิดไฟอยู่ แล้วกดปั่นไฟ ให้โชว์ขึ้นมาค้างไว้ 3 วินาที แล้วค่อย Fade หาย
             _batteryFadeRoutine = StartCoroutine(FadeBatteryOutRoutine(3.0f));
         }
 
@@ -369,10 +387,8 @@ namespace SyntaxError.Managers
         {
             if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 1f;
 
-            // โชว์ค้างไว้ตามเวลา Delay
             yield return new WaitForSeconds(delayBeforeFade);
 
-            // ค่อยๆ ลด Alpha ลงจนเหลือ 0
             while (batteryCanvasGroup != null && batteryCanvasGroup.alpha > 0f)
             {
                 batteryCanvasGroup.alpha -= Time.deltaTime * batteryFadeSpeed;
