@@ -9,8 +9,11 @@ EditorBuildSettings:
     path: Assets/_Games/Scenes/Scene0_MainGame.unity
     guid: 7579f4c6779c44e47a98b6e3f8f3a87e
   - enabled: 1
-    path: Assets/_Games/SandBox/Scene1_CutSceneTest.unity
-    guid: 0520b392288945c4088846a89f201bb8
+    path: Assets/_Games/Scenes/Scene1_CutScene_TrueEnding.unity
+    guid: ec651ae2707b88040a35f9a03b318f90
+  - enabled: 1
+    path: Assets/_Games/Scenes/Scene2_CutScene_BadEnding.unity
+    guid: 315bd24bea6d412449819392727016ca
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
