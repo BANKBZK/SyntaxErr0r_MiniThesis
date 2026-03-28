@@ -72,6 +72,8 @@ MonoBehaviour:
   _fadeUI: {fileID: 0}
   _fadeDuration: 1
   _finalLoopTrigger: 8
+  trueEndingScene: 1
+  falseEndingScene: 2
 --- !u!114 &1388815034223945503
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,9 +86,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 55
+  _chance: 100
   _safeLoops: 0000000004000000
   _allAnomalies:
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -202,6 +205,12 @@ MonoBehaviour:
     pitch: 1
     loop: 0
     source: {fileID: 0}
+  - name: BrokenLightBulb
+    clip: {fileID: 8300000, guid: d6a57ea29d0f03f44b598cd2b376cedc, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
 --- !u!114 &1010481440243996040
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,6 +223,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a064b18bf371ea4ea7c015188d6254b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mainSceneName: Scene0_MainGame
   _playerInput: {fileID: 0}
   mainMenuUI: {fileID: 0}
   optionUI: {fileID: 0}
