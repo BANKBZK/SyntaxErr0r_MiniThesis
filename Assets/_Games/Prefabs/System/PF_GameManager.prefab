@@ -87,20 +87,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _chance: 100
-  _safeLoops: 0000000004000000
+  _safeLoops: 
   _allAnomalies:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
 --- !u!114 &2975407796540419083
 MonoBehaviour:
