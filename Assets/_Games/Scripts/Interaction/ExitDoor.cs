@@ -56,7 +56,7 @@ namespace SyntaxError.Interaction
             }
 
             // ถ้าไม่ได้พิมพ์อะไรไว้ ให้ใช้ข้อความ Default
-            return _isAnomalyExit ? "Report Anomaly" : "Proceed (Normal)";
+            return _isAnomalyExit ? "Report Anomaly" : "Proceed Normal";
         }
 
         private IEnumerator OpenAndSubmit()
