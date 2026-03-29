@@ -37,6 +37,10 @@ namespace SyntaxError.Player
         private bool _isExhausted = false;
         private Vector3 _velocity;
 
+        [Header("Animation")]
+        [Tooltip("ลากโมเดลตัวละครที่มี Animator มาใส่ตรงนี้")]
+        [SerializeField] private Animator _animator; // <-- [เพิ่มบรรทัดนี้]
+
         private void Start()
         {
             _controller = GetComponent<CharacterController>();
@@ -123,6 +127,16 @@ namespace SyntaxError.Player
             else if (isTryingToSprint && !_isExhausted) currentSpeed = _sprintSpeed;
 
             _controller.Move(move * currentSpeed * Time.deltaTime);
+
+            if (_animator != null)
+            {
+                // คำนวณความเร็วการเดินจริงๆ ในแนวนอน (ตัดแกน Y ที่เป็นแรงโน้มถ่วงทิ้ง)
+                Vector3 horizontalVelocity = new Vector3(_controller.velocity.x, 0, _controller.velocity.z);
+
+                // ส่งค่าไปให้ Animator
+                _animator.SetFloat("Speed", horizontalVelocity.magnitude);
+                _animator.SetBool("IsCrouching", isCrouching);
+            }
         }
 
         private void ApplyGravity()

@@ -69,27 +69,26 @@ namespace SyntaxError.Player
             float speed = horizontalVelocity.magnitude;
             bool hasInput = _inputManager != null && _inputManager.MoveInput.magnitude > 0.1f;
 
-            if ((speed > 0.1f || hasInput) && _controller.isGrounded)
+            // เพิ่ม !_inputManager.IsCrouching เพื่อบอกว่า "ถ้าเดินอยู่และไม่ได้นั่งยอง ถึงจะทำ Head Bob"
+            if ((speed > 0.1f || hasInput) && _controller.isGrounded && !_inputManager.IsCrouching)
             {
                 bool isActuallySprinting = speed > 4.0f;
                 float currentFreq = isActuallySprinting ? _bobFrequency * _sprintMultiplier : _bobFrequency;
                 float currentAmp = isActuallySprinting ? _bobAmplitude * _sprintMultiplier : _bobAmplitude;
 
-                // ถ้าย่อตัวอยู่ ให้ลด Head Bob ลงครึ่งนึง (เดินนิ่งขึ้น)
-                if (_inputManager.IsCrouching) currentAmp *= 0.5f;
-
                 _timer += Time.deltaTime * currentFreq;
                 float newY = _defaultYPos + Mathf.Sin(_timer) * currentAmp;
                 _cameraHolder.localPosition = new Vector3(_cameraHolder.localPosition.x, newY, _cameraHolder.localPosition.z);
 
-                // --- ระบบเสียงเท้า: ถ้าย่อตัวอยู่ จะไม่เล่นเสียงฝีเท้า (เงียบกริบ) ---
-                if (_enableFootsteps && !_inputManager.IsCrouching)
+                // --- ระบบเสียงเท้าทำงานเฉพาะตอนไม่ได้นั่งยอง ---
+                if (_enableFootsteps)
                 {
                     HandleFootsteps(Mathf.Sin(_timer));
                 }
             }
             else
             {
+                // ถ้านั่งยอง หรือยืนนิ่งๆ ให้ดึงกล้องกลับมาที่จุดศูนย์กลาง (ความสูงจะปรับตามการนั่งยองอัตโนมัติ)
                 ResetCameraPosition();
             }
         }
