@@ -86,9 +86,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 100
-  _safeLoops: 
+  _chance: 55
+  _safeLoops: 0000000004000000
   _allAnomalies:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
 --- !u!114 &2975407796540419083
 MonoBehaviour:
