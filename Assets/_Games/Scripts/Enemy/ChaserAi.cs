@@ -87,6 +87,10 @@ namespace SyntaxError.Enemy
         [Tooltip("ถ้าติ๊กถูก เริ่มมาผีจะยืนนิ่งๆ ไม่มี AI จนกว่าจะถูก Event Trigger ปลุก")]
         [SerializeField] private bool _startDormant = false;
 
+        [Header("Animation")]
+        [Tooltip("ลากโมเดลผีที่มี Animator มาใส่ตรงนี้")]
+        [SerializeField] private Animator _animator;
+
         private Vector3 _lastPlayerPos;
         private Vector3 _playerVelocity;
 
@@ -138,7 +142,7 @@ namespace SyntaxError.Enemy
             {
                 TryKillPlayer(distanceToPlayer);
             }
-
+            UpdateAnimation();
             UpdateDebugUI();
         }
 
@@ -610,6 +614,17 @@ namespace SyntaxError.Enemy
 
             _currentStunTime = 0f;
             _impatienceGauge = 0f;
+        }
+        private void UpdateAnimation()
+        {
+            if (_animator != null && _agent != null)
+            {
+                // ดึงความเร็วจริงที่ผีกำลังเคลื่อนที่
+                float currentSpeed = _agent.velocity.magnitude;
+
+                // ส่งค่าไปให้ Animator
+                _animator.SetFloat("Speed", currentSpeed);
+            }
         }
         private void UpdateDebugUI()
         {
