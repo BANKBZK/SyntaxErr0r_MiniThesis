@@ -56,7 +56,7 @@ namespace SyntaxError.Enemy
         [SerializeField] private float _timeToStun = 3.0f;
         [SerializeField] private float _minBatteryToStun = 50f;
         [SerializeField] private float _stunSlowdownMultiplier = 0.1f;
-        private float _currentStunTime = 0f;
+        [SerializeField] private float _currentStunTime = 0f;
 
         [Header("Hearing Settings")]
         [SerializeField] private float _crankHearingRadius = 25f;
@@ -624,6 +624,14 @@ namespace SyntaxError.Enemy
 
                 // ส่งค่าไปให้ Animator
                 _animator.SetFloat("Speed", currentSpeed);
+                if (_currentStunTime > 0.1)
+                {
+                    _animator.SetBool("IsStunned", true);
+                }
+                else
+                {
+                    _animator.SetBool("IsStunned", false);
+                }
             }
         }
         private void UpdateDebugUI()
