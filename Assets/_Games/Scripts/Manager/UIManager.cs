@@ -3,8 +3,8 @@ using UnityEngine.InputSystem;
 using TMPro;
 using System.Collections;
 using SyntaxError.Inputs;
-using UnityEngine.SceneManagement; // เพิ่มการจัดการ Scene
-using SyntaxError.Story;           // เพิ่มเพื่อเรียกใช้ StoryTrigger
+using UnityEngine.SceneManagement;
+using SyntaxError.Story;
 
 namespace SyntaxError.Managers
 {
@@ -25,6 +25,12 @@ namespace SyntaxError.Managers
         public GameObject creditUI;
         public GameObject hudUI;
         public GameObject pauseUI;
+
+        [Header("Settings Sub-Panels")]
+        [Tooltip("หน้าต่างย่อยในหน้า Option")]
+        public GameObject generalSettingsUI;
+        public GameObject videoSettingsUI;
+        public GameObject audioSettingsUI;
 
         [Header("HUD Elements")]
         public TextMeshProUGUI loopText;
@@ -90,7 +96,7 @@ namespace SyntaxError.Managers
 
             if (_playerInput != null) _playerInput.enabled = false;
 
-            mainMenuUI.SetActive(true);
+            if (mainMenuUI != null) mainMenuUI.SetActive(true);
             if (optionUI != null) optionUI.SetActive(false);
             if (creditUI != null) creditUI.SetActive(false);
             if (hudUI != null) hudUI.SetActive(false);
@@ -123,7 +129,7 @@ namespace SyntaxError.Managers
             }
 
             _isGameStarted = true;
-            mainMenuUI.SetActive(false);
+            if (mainMenuUI != null) mainMenuUI.SetActive(false);
             if (optionUI != null) optionUI.SetActive(false);
             if (creditUI != null) creditUI.SetActive(false);
             if (hudUI != null) hudUI.SetActive(true);
@@ -139,22 +145,29 @@ namespace SyntaxError.Managers
             _isTransitioning = false;
         }
 
+        // ==========================================
+        // 🔄 ระบบปุ่ม ESC หรือปุ่ม Cancel (ทำงานเป็น Step-by-Step)
+        // ==========================================
         private void OnCancelPressed(InputAction.CallbackContext context)
         {
             if (_isTransitioning) return;
 
-            if (!_isGameStarted)
+            // 1. ถ้าเปิดหน้า Option อยู่ ให้ปิด Option แล้วกลับไปหน้าก่อนหน้า
+            if (optionUI != null && optionUI.activeSelf)
             {
-                if ((optionUI != null && optionUI.activeSelf) || (creditUI != null && creditUI.activeSelf))
-                {
-                    if (optionUI != null) optionUI.SetActive(false);
-                    if (creditUI != null) creditUI.SetActive(false);
-                    mainMenuUI.SetActive(true);
-
-                    if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UICancelPress");
-                }
+                CloseOptionMenu();
+                return;
             }
-            else
+
+            // 2. ถ้าเปิดหน้า Credit อยู่ ให้ปิด Credit แล้วกลับไป Main Menu
+            if (creditUI != null && creditUI.activeSelf)
+            {
+                CloseCreditMenu();
+                return;
+            }
+
+            // 3. ถ้าอยู่ในเกม และไม่ได้เปิดหน้าต่างอะไรซ้อนอยู่ ให้สลับการ Pause/Resume
+            if (_isGameStarted)
             {
                 if (_isPaused) ResumeGame();
                 else PauseGame();
@@ -183,16 +196,88 @@ namespace SyntaxError.Managers
             SetCursorState(false);
         }
 
+        // ==========================================
+        // ⚙️ ระบบ Options Menu
+        // ==========================================
+
+        // ฟังก์ชันเดียวใช้ร่วมกันทั้งปุ่ม Option ใน Main Menu และ Pause Menu
         public void OnOpenOption()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+
+            // ให้โค้ดเช็คเองว่ากดมาจากหน้าไหน
+            if (!_isGameStarted)
+            {
+                // ถ้ายังไม่เริ่มเกม แปลว่าอยู่หน้า Main Menu ให้ซ่อน Main Menu
+                if (mainMenuUI != null) mainMenuUI.SetActive(false);
+            }
+            else
+            {
+                // ถ้าเริ่มเกมไปแล้ว แปลว่าอยู่หน้า Pause Menu ให้ซ่อน Pause Menu
+                if (pauseUI != null) pauseUI.SetActive(false);
+            }
+
             if (optionUI != null) optionUI.SetActive(true);
+            OpenGeneralSettings(); // เปิดมาให้แสดงหน้า General ก่อนเสมอ
         }
 
+        // ฟังก์ชันสำหรับปุ่ม Back หรือการกด ESC เพื่อออกจากหน้า Option
+        public void CloseOptionMenu()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UICancelPress");
+            if (optionUI != null) optionUI.SetActive(false);
+
+            // เช็คว่ากลับไปที่ไหน
+            if (!_isGameStarted)
+            {
+                if (mainMenuUI != null) mainMenuUI.SetActive(true);
+            }
+            else
+            {
+                if (pauseUI != null) pauseUI.SetActive(true);
+            }
+        }
+
+        // --- ฟังก์ชันสำหรับสลับหน้าต่างย่อยใน Settings ---
+        public void OpenGeneralSettings()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            if (generalSettingsUI != null) generalSettingsUI.SetActive(true);
+            if (videoSettingsUI != null) videoSettingsUI.SetActive(false);
+            if (audioSettingsUI != null) audioSettingsUI.SetActive(false);
+        }
+
+        public void OpenVideoSettings()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            if (generalSettingsUI != null) generalSettingsUI.SetActive(false);
+            if (videoSettingsUI != null) videoSettingsUI.SetActive(true);
+            if (audioSettingsUI != null) audioSettingsUI.SetActive(false);
+        }
+
+        public void OpenAudioSettings()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            if (generalSettingsUI != null) generalSettingsUI.SetActive(false);
+            if (videoSettingsUI != null) videoSettingsUI.SetActive(false);
+            if (audioSettingsUI != null) audioSettingsUI.SetActive(true);
+        }
+
+        // ==========================================
+        // 📜 ระบบ Credits
+        // ==========================================
         public void OnCreditOpen()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            if (mainMenuUI != null) mainMenuUI.SetActive(false);
             if (creditUI != null) creditUI.SetActive(true);
+        }
+
+        public void CloseCreditMenu()
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UICancelPress");
+            if (creditUI != null) creditUI.SetActive(false);
+            if (mainMenuUI != null) mainMenuUI.SetActive(true);
         }
 
         public void OnExitGame()
@@ -202,21 +287,13 @@ namespace SyntaxError.Managers
             Debug.Log("Game Exited");
         }
 
-        // ==========================================
-        // 🔄 ระบบกดกลับหน้า Main Menu (ทำ Hard Reset)
-        // ==========================================
         public void OnReturnToMainMenu()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
 
-            // 1. คืนค่าเวลาให้เดินปกติ (เพราะตอน Pause ค่า TimeScale มันเป็น 0 เกมจะค้าง)
             Time.timeScale = 1f;
-
-            // 2. ล้างความทรงจำเนื้อเรื่อง
             StoryTrigger.ResetAllStoryMemory();
 
-            // 3. ทำลายก้อน Manager ทิ้งเหมือนใน EndingSequence 
-            // (เผื่อว่าผู้เล่นกำลังโดนผีไล่ล่า หรือกดออกมาจากฉาก Ritual)
             GameObject managersObj = GameObject.Find("--- MANAGERS ---");
             if (managersObj != null)
             {
@@ -224,13 +301,11 @@ namespace SyntaxError.Managers
             }
             else
             {
-                // ถ้าไม่ได้รวมในก้อนเดียว ก็สั่งทำลายทีละตัวที่ DontDestroyOnLoad
                 if (GameManager.Instance != null) Destroy(GameManager.Instance.gameObject);
                 if (LoopManager.Instance != null) Destroy(LoopManager.Instance.gameObject);
                 if (SoundManager.Instance != null) Destroy(SoundManager.Instance.gameObject);
             }
 
-            // 4. โหลดฉาก Main Menu ขึ้นมาใหม่หมดตั้งแต่ศูนย์
             SceneManager.LoadScene(mainSceneName);
         }
 
