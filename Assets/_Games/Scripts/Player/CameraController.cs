@@ -12,25 +12,39 @@ namespace SyntaxError.Player
         [SerializeField] private Transform _playerBody;
 
         [Header("Settings")]
-        // [ข้อควรระวัง] พอเอา Time.deltaTime ออก เมาส์จะไวขึ้นมาก แนะนำให้ปรับค่านี้ใน Inspector เหลือประมาณ 0.5 - 2.0 ครับ
-        [SerializeField] private float _mouseSensitivity = 1f;
+        [Tooltip("ตัวคูณความเร็วเมาส์พื้นฐาน (ปรับสมดุลว่าเลข 1-10 ควรไวแค่ไหน)")]
+        [SerializeField] private float _sensitivityMultiplier = 0.2f;
         [SerializeField] private float _topClamp = -90f;
         [SerializeField] private float _bottomClamp = 90f;
 
         private float _xRotation = 0f;
+        private float _actualSensitivity = 1f;
+
+        private void Start()
+        {
+            // โหลดค่า Sensitivity จาก PlayerPrefs (ค่าเริ่มต้นคือ 5) ทันทีที่เริ่มด่าน
+            int savedSens = PlayerPrefs.GetInt("MouseSensitivity", 5);
+            SetSensitivity(savedSens);
+        }
 
         private void Update()
         {
             HandleCameraLook();
         }
 
+        // ฟังก์ชันรับค่าจาก UIManager (ระดับ 1-10)
+        public void SetSensitivity(int level)
+        {
+            // แปลงจากเลข 1-10 เป็นความเร็วจริงๆ (เช่น level 5 * 0.2 = ความเร็ว 1.0)
+            _actualSensitivity = level * _sensitivityMultiplier;
+        }
+
         private void HandleCameraLook()
         {
             if (_inputManager == null) return;
 
-            // [แก้] เอา Time.deltaTime ออกจากการคำนวณ Mouse Delta
-            float mouseX = _inputManager.LookInput.x * _mouseSensitivity;
-            float mouseY = _inputManager.LookInput.y * _mouseSensitivity;
+            float mouseX = _inputManager.LookInput.x * _actualSensitivity;
+            float mouseY = _inputManager.LookInput.y * _actualSensitivity;
 
             // คำนวณการก้มเงย (Rotation รอบแกน X)
             _xRotation -= mouseY;

@@ -5,6 +5,7 @@ using System.Collections;
 using SyntaxError.Inputs;
 using UnityEngine.SceneManagement;
 using SyntaxError.Story;
+using UnityEngine.UI;
 
 namespace SyntaxError.Managers
 {
@@ -13,7 +14,6 @@ namespace SyntaxError.Managers
         public static UIManager Instance { get; private set; }
 
         [Header("Scene Management")]
-        [Tooltip("ชื่อ Scene หลักของเกมเพื่อใช้ตอนกดกลับ Main Menu")]
         public string mainSceneName = "MainScene";
 
         [Header("Player Control")]
@@ -27,10 +27,29 @@ namespace SyntaxError.Managers
         public GameObject pauseUI;
 
         [Header("Settings Sub-Panels")]
-        [Tooltip("หน้าต่างย่อยในหน้า Option")]
         public GameObject generalSettingsUI;
         public GameObject videoSettingsUI;
         public GameObject audioSettingsUI;
+
+        // ==========================================
+        // ⚙️ ระบบ Settings Variables
+        // ==========================================
+        [Header("--- General Settings ---")]
+        public TextMeshProUGUI mouseSensitivityText;
+        private int _currentSensitivity = 5;
+        public int minSensitivity = 1;
+        public int maxSensitivity = 10;
+
+        [Header("--- Video Settings ---")]
+        public TextMeshProUGUI graphicsQualityText;
+        private int _graphicsQualityIndex = 2; // 0 = Low, 1 = Medium, 2 = High
+        private readonly string[] _qualityNames = { "Low", "Medium", "High" };
+
+        [Header("--- Audio Settings ---")]
+        public Slider masterSlider;
+        public Slider sfxSlider;
+        public Slider environmentSlider;
+        public Slider uiSlider;
 
         [Header("HUD Elements")]
         public TextMeshProUGUI loopText;
@@ -88,12 +107,131 @@ namespace SyntaxError.Managers
             ShowMainMenu();
             UpdateLoopDisplay(0);
             if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 0f;
+
+            LoadSettings(); // โหลดค่า Settings ตอนเริ่มเกม
         }
 
+        // ==========================================
+        // 💾 ระบบโหลดและเซฟ Settings
+        // ==========================================
+        private void LoadSettings()
+        {
+            // --- General ---
+            _currentSensitivity = PlayerPrefs.GetInt("MouseSensitivity", 5);
+            UpdateSensitivityUI();
+
+            // --- Video ---
+            _graphicsQualityIndex = PlayerPrefs.GetInt("GraphicsQuality", 2);
+            ApplyGraphicsQuality();
+
+            // --- Audio ---
+            float masterVol = PlayerPrefs.GetFloat("MasterVolume", 1f);
+            if (masterSlider) masterSlider.value = masterVol;
+            AudioListener.volume = masterVol; // นำค่าไปใช้งานกับเกมจริงทันที
+
+            if (sfxSlider) sfxSlider.value = PlayerPrefs.GetFloat("SFXVolume", 1f);
+            if (environmentSlider) environmentSlider.value = PlayerPrefs.GetFloat("EnvVolume", 1f);
+            if (uiSlider) uiSlider.value = PlayerPrefs.GetFloat("UIVolume", 1f);
+        }
+
+        // ==========================================
+        // 🖱️ ฟังก์ชันของหน้า GENERAL (Mouse Sensitivity)
+        // ==========================================
+        public void IncreaseSensitivity()
+        {
+            if (_currentSensitivity < maxSensitivity)
+            {
+                _currentSensitivity++;
+                PlayerPrefs.SetInt("MouseSensitivity", _currentSensitivity);
+                UpdateSensitivityUI();
+                if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            }
+        }
+
+        public void DecreaseSensitivity()
+        {
+            if (_currentSensitivity > minSensitivity)
+            {
+                _currentSensitivity--;
+                PlayerPrefs.SetInt("MouseSensitivity", _currentSensitivity);
+                UpdateSensitivityUI();
+                if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+            }
+        }
+
+        private void UpdateSensitivityUI()
+        {
+            if (mouseSensitivityText != null)
+                mouseSensitivityText.text = _currentSensitivity.ToString();
+
+            // ค้นหา CameraController ในฉากและเปลี่ยนความเร็วให้แบบ Real-Time ทันที
+            SyntaxError.Player.CameraController cam = Object.FindFirstObjectByType<SyntaxError.Player.CameraController>();
+            if (cam != null)
+            {
+                cam.SetSensitivity(_currentSensitivity);
+            }
+        }
+
+        // ==========================================
+        // 🖥️ ฟังก์ชันของหน้า VIDEO (Graphics Quality)
+        // ==========================================
+        public void NextGraphicsQuality()
+        {
+            _graphicsQualityIndex++;
+            if (_graphicsQualityIndex > 2) _graphicsQualityIndex = 0;
+
+            ApplyGraphicsQuality();
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+        }
+
+        public void PreviousGraphicsQuality()
+        {
+            _graphicsQualityIndex--;
+            if (_graphicsQualityIndex < 0) _graphicsQualityIndex = 2;
+
+            ApplyGraphicsQuality();
+            if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
+        }
+
+        private void ApplyGraphicsQuality()
+        {
+            QualitySettings.SetQualityLevel(_graphicsQualityIndex, true);
+            PlayerPrefs.SetInt("GraphicsQuality", _graphicsQualityIndex);
+
+            if (graphicsQualityText != null)
+                graphicsQualityText.text = _qualityNames[_graphicsQualityIndex];
+        }
+
+        // ==========================================
+        // 🔊 ฟังก์ชันของหน้า AUDIO (Volume Sliders)
+        // ==========================================
+        public void OnMasterVolumeChanged(float value)
+        {
+            PlayerPrefs.SetFloat("MasterVolume", value);
+            AudioListener.volume = value; // ปรับเสียงทั้งเกมทันที
+        }
+
+        public void OnSFXVolumeChanged(float value)
+        {
+            PlayerPrefs.SetFloat("SFXVolume", value);
+        }
+
+        public void OnEnvironmentVolumeChanged(float value)
+        {
+            PlayerPrefs.SetFloat("EnvVolume", value);
+        }
+
+        public void OnUIVolumeChanged(float value)
+        {
+            PlayerPrefs.SetFloat("UIVolume", value);
+        }
+
+        // ==========================================
+        // UI & Game Flow Methods
+        // ==========================================
         private void ShowMainMenu()
         {
             _isGameStarted = false;
-
             if (_playerInput != null) _playerInput.enabled = false;
 
             if (mainMenuUI != null) mainMenuUI.SetActive(true);
@@ -145,28 +283,22 @@ namespace SyntaxError.Managers
             _isTransitioning = false;
         }
 
-        // ==========================================
-        // 🔄 ระบบปุ่ม ESC หรือปุ่ม Cancel (ทำงานเป็น Step-by-Step)
-        // ==========================================
         private void OnCancelPressed(InputAction.CallbackContext context)
         {
             if (_isTransitioning) return;
 
-            // 1. ถ้าเปิดหน้า Option อยู่ ให้ปิด Option แล้วกลับไปหน้าก่อนหน้า
             if (optionUI != null && optionUI.activeSelf)
             {
                 CloseOptionMenu();
                 return;
             }
 
-            // 2. ถ้าเปิดหน้า Credit อยู่ ให้ปิด Credit แล้วกลับไป Main Menu
             if (creditUI != null && creditUI.activeSelf)
             {
                 CloseCreditMenu();
                 return;
             }
 
-            // 3. ถ้าอยู่ในเกม และไม่ได้เปิดหน้าต่างอะไรซ้อนอยู่ ให้สลับการ Pause/Resume
             if (_isGameStarted)
             {
                 if (_isPaused) ResumeGame();
@@ -196,38 +328,28 @@ namespace SyntaxError.Managers
             SetCursorState(false);
         }
 
-        // ==========================================
-        // ⚙️ ระบบ Options Menu
-        // ==========================================
-
-        // ฟังก์ชันเดียวใช้ร่วมกันทั้งปุ่ม Option ใน Main Menu และ Pause Menu
         public void OnOpenOption()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
 
-            // ให้โค้ดเช็คเองว่ากดมาจากหน้าไหน
             if (!_isGameStarted)
             {
-                // ถ้ายังไม่เริ่มเกม แปลว่าอยู่หน้า Main Menu ให้ซ่อน Main Menu
                 if (mainMenuUI != null) mainMenuUI.SetActive(false);
             }
             else
             {
-                // ถ้าเริ่มเกมไปแล้ว แปลว่าอยู่หน้า Pause Menu ให้ซ่อน Pause Menu
                 if (pauseUI != null) pauseUI.SetActive(false);
             }
 
             if (optionUI != null) optionUI.SetActive(true);
-            OpenGeneralSettings(); // เปิดมาให้แสดงหน้า General ก่อนเสมอ
+            OpenGeneralSettings();
         }
 
-        // ฟังก์ชันสำหรับปุ่ม Back หรือการกด ESC เพื่อออกจากหน้า Option
         public void CloseOptionMenu()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UICancelPress");
             if (optionUI != null) optionUI.SetActive(false);
 
-            // เช็คว่ากลับไปที่ไหน
             if (!_isGameStarted)
             {
                 if (mainMenuUI != null) mainMenuUI.SetActive(true);
@@ -238,7 +360,6 @@ namespace SyntaxError.Managers
             }
         }
 
-        // --- ฟังก์ชันสำหรับสลับหน้าต่างย่อยใน Settings ---
         public void OpenGeneralSettings()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
@@ -263,9 +384,6 @@ namespace SyntaxError.Managers
             if (audioSettingsUI != null) audioSettingsUI.SetActive(true);
         }
 
-        // ==========================================
-        // 📜 ระบบ Credits
-        // ==========================================
         public void OnCreditOpen()
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
