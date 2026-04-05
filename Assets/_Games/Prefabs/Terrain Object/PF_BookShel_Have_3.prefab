@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3385681364655876812}
   - component: {fileID: 8650893488714127071}
   - component: {fileID: 7269362642401173460}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BOX (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -97,7 +97,7 @@ GameObject:
   - component: {fileID: 6131226649022595349}
   - component: {fileID: 8812195162231679828}
   - component: {fileID: 5061375495538725321}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BOX (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -183,7 +183,7 @@ GameObject:
   - component: {fileID: 7858167169946832034}
   - component: {fileID: 3346529584337736181}
   - component: {fileID: 2543480550604942978}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BOX (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -269,6 +269,10 @@ PrefabInstance:
     - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_RED (7)
+      objectReference: {fileID: 0}
+    - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 606401426743972941, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_LocalScale.x
@@ -396,6 +400,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (17)
       objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -469,6 +477,10 @@ PrefabInstance:
     - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (15)
+      objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -544,6 +556,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (14)
       objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -618,6 +634,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_Brownd (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 9060208904239906903, guid: 0b3ffd8620cf96941ad2cfa4a18ec483, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -639,6 +659,10 @@ PrefabInstance:
     - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_RED (7)
+      objectReference: {fileID: 0}
+    - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 606401426743972941, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_LocalScale.x
@@ -713,6 +737,10 @@ PrefabInstance:
     - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_RED (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 606401426743972941, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_LocalScale.x
@@ -840,6 +868,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (18)
       objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -914,6 +946,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_Brownd (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 9060208904239906903, guid: 0b3ffd8620cf96941ad2cfa4a18ec483, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -935,6 +971,10 @@ PrefabInstance:
     - target: {fileID: 6937630987931933572, guid: 3bab3a5d7f9031a468037c94662c8a8f, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_CHANRED (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6937630987931933572, guid: 3bab3a5d7f9031a468037c94662c8a8f, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 7713744825716867390, guid: 3bab3a5d7f9031a468037c94662c8a8f, type: 3}
       propertyPath: m_LocalScale.x
@@ -1009,6 +1049,10 @@ PrefabInstance:
     - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_RED (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 606401426743972941, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_LocalScale.x
@@ -1136,6 +1180,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (16)
       objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1210,6 +1258,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (13)
       objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1231,6 +1283,10 @@ PrefabInstance:
     - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_RED (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 225617922455572215, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 606401426743972941, guid: ae3ca888c0619a04b9aa96dd43cf2034, type: 3}
       propertyPath: m_LocalScale.x
@@ -1358,6 +1414,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_Brownd (11)
       objectReference: {fileID: 0}
+    - target: {fileID: 9060208904239906903, guid: 0b3ffd8620cf96941ad2cfa4a18ec483, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1379,6 +1439,10 @@ PrefabInstance:
     - target: {fileID: 6937630987931933572, guid: 3bab3a5d7f9031a468037c94662c8a8f, type: 3}
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_CHANRED (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6937630987931933572, guid: 3bab3a5d7f9031a468037c94662c8a8f, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 7713744825716867390, guid: 3bab3a5d7f9031a468037c94662c8a8f, type: 3}
       propertyPath: m_LocalScale.x
@@ -1506,6 +1570,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_BULE (13)
       objectReference: {fileID: 0}
+    - target: {fileID: 596928994570223550, guid: 104611cf56cce82409b2dfa7ed0862b1, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1580,6 +1648,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_BOOK_NOOPEN_Brownd (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 9060208904239906903, guid: 0b3ffd8620cf96941ad2cfa4a18ec483, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1653,6 +1725,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 280e9c25ab80bda4380661a29565e6ab, type: 3}
       propertyPath: m_Name
       value: PF_BookShel_Have_3
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 280e9c25ab80bda4380661a29565e6ab, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -164,16 +164,16 @@ MonoBehaviour:
     source: {fileID: 0}
   - name: UIPress
     type: 2
-    clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
-    volume: 0.6
-    pitch: 1.53
+    clip: {fileID: 8300000, guid: 535f877a69970294999727a3686c4aba, type: 3}
+    volume: 0.5
+    pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: UICancelPress
     type: 2
-    clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
-    volume: 0.6
-    pitch: 0.78
+    clip: {fileID: 8300000, guid: 02a0a5b1966917344b8fd93cdc78f9ad, type: 3}
+    volume: 0.5
+    pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: jumpscare

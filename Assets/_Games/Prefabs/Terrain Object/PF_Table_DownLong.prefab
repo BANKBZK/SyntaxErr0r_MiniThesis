@@ -50,7 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d7e14091d35eb36469fd25aae6e5d071, type: 3}
       propertyPath: m_Name
-      value: SM_Table_DownLong
+      value: PF_Table_DownLong
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: d7e14091d35eb36469fd25aae6e5d071, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

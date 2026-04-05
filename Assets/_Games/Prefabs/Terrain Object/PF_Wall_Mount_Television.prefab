@@ -66,7 +66,11 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 2ce408cdab2006b43ab27131d83610c5, type: 2}
     - target: {fileID: 919132149155446097, guid: 98c4eaf26a7d0a5479155a98945deb72, type: 3}
       propertyPath: m_Name
-      value: SM_Wall_Mount_Television
+      value: PF_Wall_Mount_Television
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 98c4eaf26a7d0a5479155a98945deb72, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

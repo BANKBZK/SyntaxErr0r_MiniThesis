@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 787732660683336727}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PF_Chair
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 4195114600775449538}
   - component: {fileID: 2478186924315728595}
   - component: {fileID: 383843374341331008}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: chair
   m_TagString: Untagged
   m_Icon: {fileID: 0}
