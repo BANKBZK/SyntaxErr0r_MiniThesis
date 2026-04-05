@@ -114,98 +114,119 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10ed5718b53e95d4ea43e532a26ccaaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audioMixer: {fileID: 24100000, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
+  sfxGroup: {fileID: -8594915061720102456, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
+  envGroup: {fileID: 8563733278071181484, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
+  uiGroup: {fileID: -1953201747870242765, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
+  musicGroup: {fileID: 0}
   sounds:
   - name: Correct
+    type: 0
     clip: {fileID: 8300000, guid: b6bebc4951874314f857ad4abb8d1c06, type: 3}
     volume: 1
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: Wrong
+    type: 0
     clip: {fileID: 8300000, guid: f1d3abad8340d62409c57e00dba38ed8, type: 3}
     volume: 1
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: DoorOpen
+    type: 1
     clip: {fileID: 8300000, guid: 24754698eca3bb04ab102b811133a30f, type: 3}
     volume: 0.7
     pitch: 1.05
     loop: 0
     source: {fileID: 0}
   - name: Step1
+    type: 1
     clip: {fileID: 8300000, guid: 0555b15592761ae47b9ef0aebb52582e, type: 3}
     volume: 0.3
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: Step2
+    type: 1
     clip: {fileID: 8300000, guid: 31dddff4b733e4f46a9d61273a43b8bf, type: 3}
     volume: 0.3
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: Click
+    type: 0
     clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
     volume: 0.6
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: UIPress
+    type: 2
     clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
     volume: 0.6
     pitch: 1.53
     loop: 0
     source: {fileID: 0}
   - name: UICancelPress
+    type: 2
     clip: {fileID: 8300000, guid: 265a45a853e264e43be6c59eddfc8025, type: 3}
     volume: 0.6
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
   - name: jumpscare
+    type: 1
     clip: {fileID: 8300000, guid: d8fd46eaea52ee74487a8f353f004de8, type: 3}
     volume: 0.8
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
   - name: Runningman
+    type: 1
     clip: {fileID: 8300000, guid: 163f69d362f22624bbb96959b8b78edb, type: 3}
     volume: 0.6
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
   - name: Soccerball
+    type: 1
     clip: {fileID: 8300000, guid: e7761cef591ac704db6606a274cd8668, type: 3}
     volume: 0.6
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
   - name: FallingChair
+    type: 1
     clip: {fileID: 8300000, guid: 1b919f5b92a729940bf7cf0a9cdb6900, type: 3}
     volume: 1
     pitch: 0.78
     loop: 0
     source: {fileID: 0}
   - name: PlayerPant
+    type: 1
     clip: {fileID: 8300000, guid: 6f794660d11837747b975525f98d5173, type: 3}
     volume: 1
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: FlashlightCrank
+    type: 0
     clip: {fileID: 8300000, guid: eb7734be5c97e0349a031c5a16fdf5eb, type: 3}
     volume: 1
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: GhostWhisper
+    type: 1
     clip: {fileID: 8300000, guid: 3a90328728ca0794ebda6eafce3ec2a0, type: 3}
     volume: 1
     pitch: 1
     loop: 0
     source: {fileID: 0}
   - name: BrokenLightBulb
+    type: 1
     clip: {fileID: 8300000, guid: d6a57ea29d0f03f44b598cd2b376cedc, type: 3}
     volume: 1
     pitch: 1
@@ -230,6 +251,17 @@ MonoBehaviour:
   creditUI: {fileID: 0}
   hudUI: {fileID: 0}
   pauseUI: {fileID: 0}
+  generalSettingsUI: {fileID: 0}
+  videoSettingsUI: {fileID: 0}
+  audioSettingsUI: {fileID: 0}
+  mouseSensitivityText: {fileID: 0}
+  minSensitivity: 1
+  maxSensitivity: 10
+  graphicsQualityText: {fileID: 0}
+  masterSlider: {fileID: 0}
+  sfxSlider: {fileID: 0}
+  environmentSlider: {fileID: 0}
+  uiSlider: {fileID: 0}
   loopText: {fileID: 0}
   fadeUI: {fileID: 0}
   fadeDuration: 0

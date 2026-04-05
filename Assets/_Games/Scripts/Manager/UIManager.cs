@@ -125,13 +125,22 @@ namespace SyntaxError.Managers
             ApplyGraphicsQuality();
 
             // --- Audio ---
+            // --- Audio ---
             float masterVol = PlayerPrefs.GetFloat("MasterVolume", 1f);
             if (masterSlider) masterSlider.value = masterVol;
-            AudioListener.volume = masterVol; // นำค่าไปใช้งานกับเกมจริงทันที
+            OnMasterVolumeChanged(masterVol); // เรียกฟังก์ชันให้ Mixer อัปเดตทันที
 
-            if (sfxSlider) sfxSlider.value = PlayerPrefs.GetFloat("SFXVolume", 1f);
-            if (environmentSlider) environmentSlider.value = PlayerPrefs.GetFloat("EnvVolume", 1f);
-            if (uiSlider) uiSlider.value = PlayerPrefs.GetFloat("UIVolume", 1f);
+            float sfxVol = PlayerPrefs.GetFloat("SFXVolume", 1f);
+            if (sfxSlider) sfxSlider.value = sfxVol;
+            OnSFXVolumeChanged(sfxVol);
+
+            float envVol = PlayerPrefs.GetFloat("EnvVolume", 1f);
+            if (environmentSlider) environmentSlider.value = envVol;
+            OnEnvironmentVolumeChanged(envVol);
+
+            float uiVol = PlayerPrefs.GetFloat("UIVolume", 1f);
+            if (uiSlider) uiSlider.value = uiVol;
+            OnUIVolumeChanged(uiVol);
         }
 
         // ==========================================
@@ -201,29 +210,31 @@ namespace SyntaxError.Managers
             if (graphicsQualityText != null)
                 graphicsQualityText.text = _qualityNames[_graphicsQualityIndex];
         }
-
         // ==========================================
         // 🔊 ฟังก์ชันของหน้า AUDIO (Volume Sliders)
         // ==========================================
         public void OnMasterVolumeChanged(float value)
         {
             PlayerPrefs.SetFloat("MasterVolume", value);
-            AudioListener.volume = value; // ปรับเสียงทั้งเกมทันที
+            if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("MasterVol", value);
         }
 
         public void OnSFXVolumeChanged(float value)
         {
             PlayerPrefs.SetFloat("SFXVolume", value);
+            if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("SFXVol", value);
         }
 
         public void OnEnvironmentVolumeChanged(float value)
         {
             PlayerPrefs.SetFloat("EnvVolume", value);
+            if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("EnvVol", value);
         }
 
         public void OnUIVolumeChanged(float value)
         {
             PlayerPrefs.SetFloat("UIVolume", value);
+            if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("UIVol", value);
         }
 
         // ==========================================
