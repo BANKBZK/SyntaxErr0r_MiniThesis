@@ -22,15 +22,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -29.87
+      value: 17.845337
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -149.907
+      value: -1.0399475
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 36.57
+      value: -21.665154
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
       propertyPath: m_LocalRotation.w
@@ -65,7 +65,37 @@ PrefabInstance:
       value: PE_TABLE_TEC
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: -5565131188563554716, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5722919998248869405, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 977461909238871267}
   m_SourcePrefab: {fileID: 100100000, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
+--- !u!1 &4603024076522207839 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5722919998248869405, guid: 6977c1f8c34099f428d8ee9fd8ac2a31, type: 3}
+  m_PrefabInstance: {fileID: 8109539719894230082}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &977461909238871267
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4603024076522207839}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2435251, y: 0.69454753, z: 0.5739917}
+  m_Center: {x: 0.0000014305115, y: 0, z: 0.0000014305115}
