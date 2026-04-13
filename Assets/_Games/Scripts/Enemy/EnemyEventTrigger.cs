@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using SyntaxError.Enemy;
-using SyntaxError.Managers; // เผื่อใส่เสียง
+using SyntaxError.Managers;
+using SyntaxError.Interfaces; // [เพิ่ม] เพื่อเรียกใช้ IResettable
 
 namespace SyntaxError.Interaction
 {
-    public class EnemyEventTrigger : MonoBehaviour
+    public class EnemyEventTrigger : MonoBehaviour, IResettable // [แก้ไข] เพิ่ม IResettable
     {
         public enum ZoneAction
         {
@@ -32,6 +33,35 @@ namespace SyntaxError.Interaction
         [SerializeField] private string _jumpscareSound;
 
         private bool _hasTriggered = false;
+
+        // ==========================================
+        // [เพิ่ม] ระบบลงทะเบียนกับ LoopManager
+        // ==========================================
+        private void Start()
+        {
+            if (LoopManager.Instance != null)
+            {
+                LoopManager.Instance.Register(this);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (LoopManager.Instance != null)
+            {
+                LoopManager.Instance.Unregister(this);
+            }
+        }
+
+        // ==========================================
+        // [เพิ่ม] ฟังก์ชันรีเซ็ตสถานะทริกเกอร์
+        // ==========================================
+        public void OnLoopReset(int currentLoop)
+        {
+            // เมื่อ Reset กลับมาที่ Loop 0 ให้สามารถเหยียบ Trigger นี้ได้อีกครั้ง
+            _hasTriggered = false;
+            Debug.Log($"[EnemyEventTrigger] {gameObject.name} has been reset for Loop {currentLoop}");
+        }
 
         private void OnTriggerEnter(Collider other)
         {

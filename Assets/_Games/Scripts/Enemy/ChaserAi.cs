@@ -3,6 +3,7 @@ using UnityEngine.AI;
 using SyntaxError.Player;
 using SyntaxError.Inputs;
 using SyntaxError.Managers;
+using SyntaxError.Interfaces; // [เพิ่ม] เพื่อเรียกใช้ IResettable
 
 namespace SyntaxError.Enemy
 {
@@ -18,7 +19,7 @@ namespace SyntaxError.Enemy
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
-    public class ChaserAI : MonoBehaviour
+    public class ChaserAI : MonoBehaviour, IResettable // [แก้ไข] เพิ่ม IResettable
     {
         [Header("References")]
         [SerializeField] private Transform _playerTransform;
@@ -93,15 +94,24 @@ namespace SyntaxError.Enemy
 
         private Vector3 _lastPlayerPos;
         private Vector3 _playerVelocity;
-
-        // ตัวแปรเช็คว่าแสดงละครจบแล้วให้หายไปไหม?
         private bool _disappearAfterScript = false;
+
+        // [เพิ่ม] ตัวแปรสำหรับจำจุดเกิดต้นฉบับ
+        private Vector3 _initialPosition;
+        private Quaternion _initialRotation;
 
         private void Start()
         {
             _agent = GetComponent<NavMeshAgent>();
             _agent.angularSpeed = _turnSpeed;
             _agent.acceleration = _acceleration;
+
+            // [เพิ่ม] จดจำตำแหน่งแรกสุดที่นายวางผีไว้
+            _initialPosition = transform.position;
+            _initialRotation = transform.rotation;
+
+            // [เพิ่ม] ลงทะเบียนกับ LoopManager
+            if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
 
             if (_playerTransform == null) _playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
             if (_playerCamera == null && Camera.main != null) _playerCamera = Camera.main.transform;
@@ -110,20 +120,60 @@ namespace SyntaxError.Enemy
 
             _lastPlayerPos = _playerTransform.position;
 
-            // 2. เช็คว่าให้เริ่มมาแบบหลับ หรือแบบตื่น
-            if (_startDormant)
+            if (_startDormant) ChangeState(AIState.Dormant);
+            else ChangeState(AIState.Idle);
+        }
+
+        private void OnDestroy()
+        {
+            // [เพิ่ม] ถอนการลงทะเบียน
+            if (LoopManager.Instance != null) LoopManager.Instance.Unregister(this);
+        }
+
+        // ==========================================
+        // [เพิ่ม] ฟังก์ชันรีเซ็ตจาก IResettable
+        // ==========================================
+        public void OnLoopReset(int currentLoop)
+        {
+            // รีเซ็ตเกจและความโกรธทุกครั้งที่เปลี่ยนลูป (หรือโดนส่งกลับ)
+            _impatienceGauge = 0f;
+            _currentStunTime = 0f;
+            _stateTimer = 0f;
+            _lastRollResult = "Resetting AI system...";
+
+            // หยุดเพลงไล่ล่า
+            if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
+                SoundManager.Instance.StopMusic(_chaseMusic);
+
+            // ถ้าเป็นการ Reset กลับ Loop 0 (ตอนตายหรือเริ่มใหม่)
+            if (currentLoop == 0)
             {
-                ChangeState(AIState.Dormant);
-            }
-            else
-            {
-                ChangeState(AIState.Idle);
+                // 1. วาร์ปกลับจุดเกิดต้นฉบับ
+                if (_agent != null)
+                {
+                    _agent.enabled = false; // ปิด NavMesh ชั่วคราวเพื่อให้วาร์ปตำแหน่งได้
+                    transform.position = _initialPosition;
+                    transform.rotation = _initialRotation;
+                    _agent.enabled = true;
+                }
+
+                // 2. เปิดตัวตนกลับมา (เผื่อกรณีหายตัวไปหลังจากเล่น Scripted จบ)
+                gameObject.SetActive(true);
+
+                // 3. เซ็ตสถานะให้กลับไปเป็น Dormant หรือ Idle ตามที่ตั้งไว้
+                if (_startDormant) ChangeState(AIState.Dormant);
+                else ChangeState(AIState.Idle);
+
+                Debug.Log($"<color=cyan>[ChaserAI] Full Reset! Warp to: {_initialPosition}</color>");
             }
         }
 
         private void Update()
         {
             if (_playerTransform == null) return;
+
+            // ถ้าอยู่ในสถานะหลับ ไม่ต้องคำนวณอะไรทั้งสิ้น
+            if (CurrentState == AIState.Dormant) return;
 
             if (_stalkSoundTimer > 0) _stalkSoundTimer -= Time.deltaTime;
 
@@ -159,12 +209,10 @@ namespace SyntaxError.Enemy
             switch (newState)
             {
                 case AIState.Dormant:
-                    // สั่งให้หยุดนิ่ง ไม่ต้องตั้งเวลาอะไรทั้งสิ้น
                     if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = true;
                     break;
 
                 case AIState.Idle:
-                    // เวลาตื่น ต้องปลดล็อกการเดินด้วย
                     if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = false;
                     _stateTimer = Random.Range(_idleTimeMin, _idleTimeMax);
                     break;
@@ -177,7 +225,6 @@ namespace SyntaxError.Enemy
                 case AIState.Stalk:
                     _stateTimer = _stalkWaitTime;
                     PickFlankPosition();
-
                     if (SoundManager.Instance != null && !string.IsNullOrEmpty(_stalkStartSound) && _stalkSoundTimer <= 0f)
                     {
                         SoundManager.Instance.PlaySFX(_stalkStartSound);
@@ -188,11 +235,8 @@ namespace SyntaxError.Enemy
                 case AIState.Chase:
                     _stateTimer = _maxChaseTime;
                     SafeSetDestination(_playerTransform.position);
-
                     if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
-                    {
                         SoundManager.Instance.PlayMusic(_chaseMusic);
-                    }
                     break;
 
                 case AIState.Flee:
@@ -221,7 +265,6 @@ namespace SyntaxError.Enemy
         private void UpdateAgentSpeed()
         {
             if (CurrentState == AIState.Scripted) return;
-
             float baseSpeed = GetBaseSpeedForState(CurrentState);
 
             if (_currentStunTime > 0 && CurrentState != AIState.Flee)
@@ -258,33 +301,23 @@ namespace SyntaxError.Enemy
 
         private void HandleStateMachine(float distance, bool canSee, bool canHear, bool isLookingAtMe)
         {
-            // 🎬 ระบบ Scripted State
             if (CurrentState == AIState.Dormant) return;
             if (CurrentState == AIState.Scripted)
             {
-                // นับถอยหลัง Safety Timer
-                if (_stateTimer > 0f)
-                {
-                    _stateTimer -= Time.deltaTime;
-                }
+                if (_stateTimer > 0f) _stateTimer -= Time.deltaTime;
                 else
                 {
-                    // พอหมดเวลา Safety Timer ค่อยเริ่มเช็คว่าเดินถึงจุดหมายหรือยัง
                     if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
                     {
-                        if (_disappearAfterScript)
-                        {
-                            gameObject.SetActive(false); // หายตัวไป
-                        }
+                        if (_disappearAfterScript) gameObject.SetActive(false);
                         else
                         {
-                            // กลับมาล่าตามปกติ!
                             _lastRollResult = "ละครจบแล้ว... เริ่มล่าเหยื่อต่อ!";
                             ChangeState(AIState.Idle);
                         }
                     }
                 }
-                return; // หยุดการคำนวณ State อื่นๆ ทั้งหมด
+                return;
             }
 
             if (_currentStunTime >= _timeToStun && CurrentState != AIState.Flee && CurrentState != AIState.Chase)
@@ -305,107 +338,60 @@ namespace SyntaxError.Enemy
                 case AIState.Idle:
                     if (canHear) { ChangeState(AIState.Stalk); break; }
                     if (canSee && distance < 10f) { ChangeState(AIState.Chase); break; }
-
                     _stateTimer -= Time.deltaTime;
                     if (_stateTimer <= 0f)
                     {
                         int roll = Random.Range(1, 21);
-                        if (roll <= _aiLevel)
-                        {
-                            _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: ย่องไปดักหลัง!";
-                            ChangeState(AIState.Stalk);
-                        }
-                        else
-                        {
-                            _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: เดินสุ่มปกติ";
-                            ChangeState(AIState.Patrol);
-                        }
+                        if (roll <= _aiLevel) ChangeState(AIState.Stalk);
+                        else ChangeState(AIState.Patrol);
                     }
                     break;
 
                 case AIState.Patrol:
                     if (canHear) { ChangeState(AIState.Stalk); break; }
                     if (canSee && distance < 10f) { ChangeState(AIState.Chase); break; }
-
                     if (!_agent.pathPending && _agent.remainingDistance < 1.0f)
                     {
                         _stateTimer -= Time.deltaTime;
                         if (_stateTimer <= 0f)
                         {
                             int roll = Random.Range(1, 21);
-                            if (roll <= _aiLevel)
-                            {
-                                _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: เข้าโหมด Stalk!";
-                                ChangeState(AIState.Stalk);
-                            }
-                            else
-                            {
-                                _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: ยืนพักเหนื่อย";
-                                ChangeState(AIState.Idle);
-                            }
+                            if (roll <= _aiLevel) ChangeState(AIState.Stalk);
+                            else ChangeState(AIState.Idle);
                         }
                     }
                     break;
 
                 case AIState.Stalk:
-                    if (_impatienceGauge >= _maxImpatience)
-                    {
-                        _lastRollResult = "เหยื่อเผลอแล้ว! วิ่งชาร์จ!";
-                        ChangeState(AIState.Chase);
-                        break;
-                    }
-
+                    if (_impatienceGauge >= _maxImpatience) { ChangeState(AIState.Chase); break; }
                     if (canSee && distance < 6f) { ChangeState(AIState.Chase); break; }
                     if (!canHear && !canSee && !_agent.pathPending && _agent.remainingDistance < 1f && _stateTimer <= 0f)
                     {
                         ChangeState(AIState.Idle); break;
                     }
-
                     if (!_agent.pathPending && _agent.remainingDistance < 1.0f)
                     {
                         _stateTimer -= Time.deltaTime;
                         if (_stateTimer <= 0f)
                         {
                             int roll = Random.Range(1, 21);
-                            if (roll <= _aiLevel)
-                            {
-                                _lastRollResult = $"ทอยได้ {roll} <= {_aiLevel}: แอบตามต่อ!";
-                                ChangeState(AIState.Stalk);
-                            }
-                            else
-                            {
-                                _lastRollResult = $"ทอยได้ {roll} > {_aiLevel}: เลิกตาม กลับไปพัก";
-                                ChangeState(AIState.Idle);
-                            }
+                            if (roll <= _aiLevel) ChangeState(AIState.Stalk);
+                            else ChangeState(AIState.Idle);
                         }
                     }
-                    else if (distance > 18f)
-                    {
-                        PickFlankPosition();
-                    }
+                    else if (distance > 18f) PickFlankPosition();
                     break;
 
                 case AIState.Chase:
                     SafeSetDestination(_playerTransform.position);
-
                     _stateTimer -= Time.deltaTime;
-                    if (_stateTimer <= 0f)
-                    {
-                        _lastRollResult = "วิ่งไล่นานเกินไป ถอยไปตั้งหลักดีกว่า!";
-                        ChangeState(AIState.Flee);
-                        break;
-                    }
-
+                    if (_stateTimer <= 0f) { ChangeState(AIState.Flee); break; }
                     if (distance > 25f) ChangeState(AIState.Idle);
                     break;
 
                 case AIState.Flee:
                     _stateTimer -= Time.deltaTime;
-                    if (_stateTimer <= 0f)
-                    {
-                        _impatienceGauge = 0f;
-                        ChangeState(AIState.Idle);
-                    }
+                    if (_stateTimer <= 0f) { _impatienceGauge = 0f; ChangeState(AIState.Idle); }
                     break;
             }
         }
@@ -413,17 +399,11 @@ namespace SyntaxError.Enemy
         private void UpdateImpatienceGauge(float distance, bool isLookingAtMe)
         {
             if (CurrentState == AIState.Stalk && distance < 12f && !isLookingAtMe)
-            {
                 _impatienceGauge += (12f - distance) * Time.deltaTime * 4f;
-            }
             else if (isLookingAtMe)
-            {
                 _impatienceGauge -= Time.deltaTime * 50f;
-            }
             else
-            {
                 _impatienceGauge -= Time.deltaTime * 5f;
-            }
 
             _impatienceGauge = Mathf.Clamp(_impatienceGauge, 0f, _maxImpatience);
         }
@@ -431,15 +411,12 @@ namespace SyntaxError.Enemy
         private void PickFlankPosition()
         {
             bool foundValidSpot = false;
-
             for (int i = 0; i < 3; i++)
             {
                 Vector3 randomDir = Random.insideUnitSphere;
                 randomDir -= _playerTransform.forward;
                 randomDir.y = 0;
-
                 Vector3 flankPos = _playerTransform.position + (randomDir.normalized * Random.Range(4f, 8f));
-
                 NavMeshHit hit;
                 if (NavMesh.SamplePosition(flankPos, out hit, 4f, NavMesh.AllAreas))
                 {
@@ -452,22 +429,18 @@ namespace SyntaxError.Enemy
                     }
                 }
             }
-
             if (!foundValidSpot) SafeSetDestination(_playerTransform.position);
         }
 
         private void PickFleePosition()
         {
             bool foundValidSpot = false;
-
             for (int i = 0; i < 3; i++)
             {
                 Vector3 fleeDirection = -_playerCamera.forward;
                 fleeDirection += Random.insideUnitSphere * 0.5f;
                 fleeDirection.y = 0;
-
                 Vector3 fleePos = transform.position + (fleeDirection.normalized * Random.Range(15f, 25f));
-
                 NavMeshHit hit;
                 if (NavMesh.SamplePosition(fleePos, out hit, 5f, NavMesh.AllAreas))
                 {
@@ -480,7 +453,6 @@ namespace SyntaxError.Enemy
                     }
                 }
             }
-
             if (!foundValidSpot) PatrolRandomly(transform.position, 15f);
         }
 
@@ -491,7 +463,6 @@ namespace SyntaxError.Enemy
             {
                 Vector3 randomDirection = Random.insideUnitSphere * radius;
                 randomDirection += origin;
-
                 NavMeshHit hit;
                 if (NavMesh.SamplePosition(randomDirection, out hit, radius, NavMesh.AllAreas))
                 {
@@ -527,7 +498,6 @@ namespace SyntaxError.Enemy
                 if (_playerVelocity.magnitude > 15f) _playerVelocity = _playerVelocity.normalized * 15f;
             }
             else _playerVelocity = Vector3.zero;
-
             _lastPlayerPos = _playerTransform.position;
         }
 
@@ -536,7 +506,6 @@ namespace SyntaxError.Enemy
             Vector3 aiEyePos = transform.position + Vector3.up;
             Vector3 playerEyePos = _playerTransform.position + Vector3.up;
             Vector3 dirToPlayer = (playerEyePos - aiEyePos).normalized;
-
             if (!Physics.Raycast(aiEyePos, dirToPlayer, distance, _obstacleMask)) CatchPlayer();
         }
 
@@ -544,7 +513,6 @@ namespace SyntaxError.Enemy
         {
             float currentSightRadius = (_playerFlashlight != null && _playerFlashlight.IsLightOn) ? _sightRadiusLight : _sightRadiusDark;
             if (distanceToPlayer > currentSightRadius) return false;
-
             Vector3 aiEyePos = transform.position + Vector3.up;
             Vector3 playerEyePos = _playerTransform.position + Vector3.up;
             return !Physics.Raycast(aiEyePos, (playerEyePos - aiEyePos).normalized, distanceToPlayer, _obstacleMask);
@@ -555,7 +523,6 @@ namespace SyntaxError.Enemy
             if (_playerInput == null) return false;
             float currentNoiseLevel = 0f;
             bool isMoving = _playerInput.MoveInput.magnitude > 0.1f;
-
             if (_playerInput.IsCranking) currentNoiseLevel = Mathf.Max(currentNoiseLevel, _crankHearingRadius);
             if (isMoving)
             {
@@ -569,6 +536,7 @@ namespace SyntaxError.Enemy
         private void CatchPlayer()
         {
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
+            // นายควรเรียกใช้ระบบ Game Over หรือ Reset ตรงนี้
         }
 
         public void WakeUp(Vector3? warpPos = null)
@@ -579,88 +547,50 @@ namespace SyntaxError.Enemy
                 transform.position = warpPos.Value;
                 _agent.enabled = true;
             }
-
             _lastRollResult = "ถูกปลุกให้ตื่นแล้ว เริ่มล่า!";
             ChangeState(AIState.Idle);
         }
-        // ===============================================
-        // 🎬 ฟังก์ชันสำหรับรับคำสั่งจาก Zone Trigger
-        // ===============================================
+
         public void PlayCinematicEvent(Vector3 spawnPoint, Vector3 destination, float walkSpeed, bool disappearAfter = false)
         {
             CurrentState = AIState.Scripted;
             _disappearAfterScript = disappearAfter;
             _lastRollResult = "กำลังเข้าฉาก Cinematic...";
-
-            // ตั้งเวลาดีเลย์ 0.5 วินาที ให้ NavMesh โหลดเส้นทางให้เสร็จก่อน
             _stateTimer = 0.5f;
-
             if (_agent != null)
             {
                 _agent.enabled = false;
                 transform.position = spawnPoint;
                 _agent.enabled = true;
-
-                // สแกนหาพื้น NavMesh ที่ใกล้จุดเกิดที่สุด (กันบั๊กจุดเกิดลอยฟ้าหรือจมดิน)
                 NavMeshHit hit;
-                if (NavMesh.SamplePosition(spawnPoint, out hit, 2f, NavMesh.AllAreas))
-                {
-                    _agent.Warp(hit.position);
-                }
-
+                if (NavMesh.SamplePosition(spawnPoint, out hit, 2f, NavMesh.AllAreas)) _agent.Warp(hit.position);
                 _agent.speed = walkSpeed;
                 _agent.SetDestination(destination);
             }
-
             _currentStunTime = 0f;
             _impatienceGauge = 0f;
         }
+
         private void UpdateAnimation()
         {
             if (_animator != null && _agent != null)
             {
-                // ดึงความเร็วจริงที่ผีกำลังเคลื่อนที่
                 float currentSpeed = _agent.velocity.magnitude;
-
-                // ส่งค่าไปให้ Animator
                 _animator.SetFloat("Speed", currentSpeed);
-                if (_currentStunTime > 0.1)
-                {
-                    _animator.SetBool("IsStunned", true);
-                }
-                else
-                {
-                    _animator.SetBool("IsStunned", false);
-                }
+                _animator.SetBool("IsStunned", _currentStunTime > 0.1);
             }
         }
+
         private void UpdateDebugUI()
         {
             if (Managers.UIManager.Instance == null) return;
-
             string debugString = $"<color=yellow>Enemy State: {CurrentState}</color>\n";
-
             if (CurrentState == AIState.Stalk || CurrentState == AIState.Idle || CurrentState == AIState.Patrol || CurrentState == AIState.Scripted)
-            {
                 debugString += $"<color=orange>[RNG] {_lastRollResult}</color>\n";
-            }
-
             debugString += $"<color=red>Impatience: {_impatienceGauge:F0}%</color>\n";
-
-            if (CurrentState == AIState.Flee)
-            {
-                debugString += "<color=green>Enemy โดน สตั้นแล้ว!</color>";
-            }
-            else if (_currentStunTime > 0)
-            {
-                float stunPercent = (_currentStunTime / _timeToStun) * 100f;
-                debugString += $"<color=orange>กำลังสตั้น enemy... {stunPercent:F0}%</color>";
-            }
-            else
-            {
-                debugString += "<color=white>Stun: 0%</color>";
-            }
-
+            if (CurrentState == AIState.Flee) debugString += "<color=green>Enemy โดน สตั้นแล้ว!</color>";
+            else if (_currentStunTime > 0) debugString += $"<color=orange>กำลังสตั้น enemy... {(_currentStunTime / _timeToStun) * 100f:F0}%</color>";
+            else debugString += "<color=white>Stun: 0%</color>";
             Managers.UIManager.Instance.UpdateAIDebugText(debugString);
         }
     }

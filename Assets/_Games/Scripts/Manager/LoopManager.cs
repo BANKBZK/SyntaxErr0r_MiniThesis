@@ -6,6 +6,7 @@ using SyntaxError.Player;
 using SyntaxError.Interaction;
 using SyntaxError.Ritual;
 using UnityEngine.SceneManagement;
+using SyntaxError.Story; // [Added] เพื่อเรียกใช้ StoryTrigger
 
 namespace SyntaxError.Managers
 {
@@ -18,14 +19,10 @@ namespace SyntaxError.Managers
         [SerializeField] private CharacterController _characterController;
 
         [Header("Teleport Points")]
-        [Tooltip("จุดเกิดปกติ (Loop 0-3)")]
         [SerializeField] private Transform _startPoint;
-
-        [Tooltip("จุดเกิดในด่านหนีผี (Ritual Level)")]
         [SerializeField] private Transform _ritualStartPoint;
 
         [Header("Loop Sequence Settings")]
-        [Tooltip("เข้าสู่ด่าน Ritual เมื่อเริ่ม Loop ที่เท่าไหร่? (เช่น 4)")]
         [SerializeField] private int _ritualLoopTrigger = 4;
 
         [Header("UI Settings")]
@@ -33,11 +30,9 @@ namespace SyntaxError.Managers
         [SerializeField] private float _fadeDuration = 1.0f;
 
         [Header("Ending Settings")]
-        [Tooltip("Loop สุดท้ายที่จะตัดสินจบเกม (เช่น 8)")]
         [SerializeField] private int _finalLoopTrigger = 8;
         public int trueEndingScene;
         public int falseEndingScene;
-
 
         private List<IResettable> _resettableObjects = new List<IResettable>();
         private bool _isTeleporting = false;
@@ -53,26 +48,31 @@ namespace SyntaxError.Managers
         public void Register(IResettable obj) { if (!_resettableObjects.Contains(obj)) _resettableObjects.Add(obj); }
         public void Unregister(IResettable obj) { if (_resettableObjects.Contains(obj)) _resettableObjects.Remove(obj); }
 
-        public void SubmitVote(bool votedAnomaly)
+        // [New Function] สำหรับการตายหรือรีเซ็ตเกมทั้งหมด
+        public void FullGameReset()
         {
             if (_isTeleporting) return;
 
-            // ตรวจคำตอบ
-            bool actuallyHasAnomaly = false;
-            if (AnomalyManager.Instance != null) actuallyHasAnomaly = AnomalyManager.Instance.IsAnomalyActive;
+            // 1. ล้างความทรงจำเนื้อเรื่องทั้งหมด
+            StoryTrigger.ResetAllStoryMemory();
 
+            // 2. สั่งเริ่มลำดับการวาร์ปโดยส่งค่า false (เพื่อ Reset Loop)
+            StartCoroutine(TeleportSequence(false));
+        }
+
+        public void SubmitVote(bool votedAnomaly)
+        {
+            if (_isTeleporting) return;
+            bool actuallyHasAnomaly = AnomalyManager.Instance != null && AnomalyManager.Instance.IsAnomalyActive;
             bool isCorrect = (votedAnomaly == actuallyHasAnomaly);
-            Debug.Log($"Vote Result: {(isCorrect ? "CORRECT" : "WRONG")}");
-
             StartCoroutine(TeleportSequence(isCorrect));
         }
 
         private IEnumerator TeleportSequence(bool isCorrect)
         {
             _isTeleporting = true;
-            yield return StartCoroutine(FadeRoutine(0f, 1f)); // จอมืด
+            yield return StartCoroutine(FadeRoutine(0f, 1f));
 
-            // --- Logic คำนวณผล ---
             if (GameManager.Instance != null)
             {
                 if (isCorrect)
@@ -80,31 +80,12 @@ namespace SyntaxError.Managers
                     GameManager.Instance.NextLoop();
                     if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("Correct");
 
-                    // ==========================================
-                    // 🏁 เช็คฉากจบเกม (The Ending Router)
-                    // ==========================================
                     if (GameManager.Instance.CurrentLoop == _finalLoopTrigger)
                     {
-                        // ถ้ามาถึง Loop 8 แล้ว ให้เช็คความจำว่าทำพิธีมาไหม?
-                        if (GameManager.Instance.IsRitualComplete)
-                        {
-                            Debug.Log("<color=yellow>=== TRUE ENDING ===</color>");
-                            SceneManager.LoadScene(trueEndingScene);
-                            // เรียกหน้าจอชนะ หรือพาไปฉาก True Ending
-                        }
-                        else
-                        {
-                            Debug.Log("<color=red>=== BAD ENDING ===</color>");
-                            SceneManager.LoadScene(falseEndingScene);
-                            // TODO: เดี๋ยวนายทำหน้า Bad Ending หรือให้ผีมากระโดดงับหัวตรงนี้ได้เลย!
-                            // ถ้ายังไม่มีชั่วคราว ก็ให้เรียก ShowWinScreen ไปก่อน หรือสร้างฟังก์ชัน ShowBadEnding() ใน UIManager ครับ
-                        }
-
-                        yield return StartCoroutine(FadeRoutine(1f, 0f)); // เฟดจอสว่างให้เห็นหน้า UI
-                        _isTeleporting = false;
-                        yield break; // หยุดการทำงานของ Coroutine นี้ไปเลย ไม่ต้องวาร์ปแล้ว (จบเกม)
+                        if (GameManager.Instance.IsRitualComplete) SceneManager.LoadScene(trueEndingScene);
+                        else SceneManager.LoadScene(falseEndingScene);
+                        yield break;
                     }
-                    // ==========================================
                 }
                 else
                 {
@@ -114,60 +95,34 @@ namespace SyntaxError.Managers
             }
 
             int loop = GameManager.Instance != null ? GameManager.Instance.CurrentLoop : 0;
-
-            // ปิด CharacterController ก่อนย้ายตำแหน่ง
             if (_characterController != null) _characterController.enabled = false;
 
-            // ==========================================
-            // 🚂 ระบบสับราง (The Loop Router)
-            // ==========================================
             if (loop == _ritualLoopTrigger && isCorrect)
             {
-                // 1. วาร์ปไปด่าน Ritual
-                if (_ritualStartPoint != null)
-                {
-                    _playerTransform.position = _ritualStartPoint.position;
-                    _playerTransform.rotation = _ritualStartPoint.rotation;
-                }
-
-                // 2. สั่งเปิดระบบวิ่ง
+                if (_ritualStartPoint != null) { _playerTransform.position = _ritualStartPoint.position; _playerTransform.rotation = _ritualStartPoint.rotation; }
                 PlayerController pController = _characterController.GetComponent<PlayerController>();
                 if (pController != null) pController.SetSprintAbility(true);
-
-                // 3. เริ่มระบบหาของไหว้ (สุ่มเกิดไอเทม และเปิดโซน Ritual)
                 if (RitualManager.Instance != null) RitualManager.Instance.SetupRitualPhase();
-
-                Debug.Log("<color=red>Entering Ritual Phase! วิ่งงงง!!</color>");
             }
             else
             {
-                // กลับมาเดินโถงปกติ (ไม่ว่าจะลูป 1-3 หรือตอบผิดกลับลูป 0)
                 _playerTransform.position = _startPoint.position;
                 _playerTransform.rotation = _startPoint.rotation;
-
-                // ล็อกไม่ให้วิ่ง
                 PlayerController pController = _characterController.GetComponent<PlayerController>();
                 if (pController != null) pController.SetSprintAbility(false);
-
-                // **[เพิ่ม] ปิดระบบโซน Ritual เผื่อเพิ่งกลับออกมาจากด่านหนีผี**
                 if (RitualManager.Instance != null) RitualManager.Instance.EndRitualPhase();
             }
-            // ==========================================
 
             Physics.SyncTransforms();
-
-            // รีเซ็ตของในฉาก (ทางเดินปกติ)
             foreach (var obj in _resettableObjects) if (obj != null) obj.OnLoopReset(loop);
 
             ExitDoor[] exits = FindObjectsByType<ExitDoor>(FindObjectsSortMode.None);
             foreach (var exit in exits) exit.ResetDoor();
-
             if (AnomalyManager.Instance != null) AnomalyManager.Instance.ProcessLoop(loop);
 
             yield return null;
             if (_characterController != null) _characterController.enabled = true;
-
-            yield return StartCoroutine(FadeRoutine(1f, 0f)); // จอสว่าง
+            yield return StartCoroutine(FadeRoutine(1f, 0f));
             _isTeleporting = false;
         }
 

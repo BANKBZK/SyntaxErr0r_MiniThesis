@@ -1,56 +1,36 @@
 ﻿using UnityEngine;
 using SyntaxError.Interaction;
+using SyntaxError.Interfaces;
+using SyntaxError.Managers;
 
 namespace SyntaxError.Ritual
 {
-    public class RitualAltar : MonoBehaviour, IInteractable
+    public class RitualAltar : MonoBehaviour, Interaction.IInteractable, IResettable
     {
-        [Header("Visual Feedback")]
-        [Tooltip("ลากโมเดลของไหว้ที่ 'วางอยู่บนแท่นแล้ว' มาใส่เรียงกัน (ซ่อนตาไว้ก่อน)")]
         [SerializeField] private GameObject[] _itemVisuals;
+
+        private void Start()
+        {
+            if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
+            UpdateVisuals();
+        }
+
+        public void OnLoopReset(int currentLoop) { UpdateVisuals(); }
 
         public void Interact()
         {
-            if (RitualManager.Instance == null) return;
-
-            // สั่งพยายามวางของ
-            bool success = RitualManager.Instance.TryPlaceItems();
-
-            if (success)
-            {
-                UpdateVisuals();
-            }
-            else
-            {
-                Debug.Log("ไม่มีของเซ่นไหว้ในมือ ไปหามาก่อน!");
-            }
+            if (RitualManager.Instance != null && RitualManager.Instance.TryPlaceItems()) UpdateVisuals();
         }
 
-        public string GetPromptText()
-        {
-            if (RitualManager.Instance == null) return "";
-
-            int holding = RitualManager.Instance.GetItemsHolding();
-            int placed = RitualManager.Instance.GetItemsPlaced();
-            int total = RitualManager.Instance.totalItemsNeeded;
-
-            if (placed >= total) return "Ritual Complete";
-            if (holding > 0) return $"Place {holding} Item(s)";
-
-            return "Requires Sacred Items"; // ยังไม่มีของในมือ
-        }
+        public string GetPromptText() => "Place Sacred Items";
 
         private void UpdateVisuals()
         {
-            int placedCount = RitualManager.Instance.GetItemsPlaced();
-
+            if (RitualManager.Instance == null) return;
+            int placed = RitualManager.Instance.GetItemsPlaced();
             for (int i = 0; i < _itemVisuals.Length; i++)
             {
-                if (_itemVisuals[i] != null)
-                {
-                    // โชว์ของตามจำนวนชิ้นที่วางไปแล้ว
-                    _itemVisuals[i].SetActive(i < placedCount);
-                }
+                if (_itemVisuals[i] != null) _itemVisuals[i].SetActive(i < placed);
             }
         }
     }

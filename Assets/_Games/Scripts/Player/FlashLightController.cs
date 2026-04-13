@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using SyntaxError.Inputs;
 using SyntaxError.Managers;
+using SyntaxError.Interfaces; // [Added] เพื่อใช้ IResettable
 
 namespace SyntaxError.Player
 {
-    public class FlashlightController : MonoBehaviour
+    public class FlashlightController : MonoBehaviour, IResettable
     {
         [Header("References")]
         [SerializeField] private InputManager _inputManager;
@@ -16,14 +17,13 @@ namespace SyntaxError.Player
         [SerializeField] private bool _wantsLightOn = false;
         [SerializeField] private float _maxBattery = 100f;
         [SerializeField] private float _drainRate = 2.0f;
-
-        [Tooltip("ระยะเวลาดีเลย์ (วินาที) ก่อนที่จะกดปั่นไฟครั้งต่อไปได้")]
-        [SerializeField] private float _crankCooldown = 0.5f; // ปรับลงเหลือ 0.5 วิ จะได้กดปั่น 5 ทีติดกันได้ไม่รำคาญเกินไป
+        [SerializeField] private float _crankCooldown = 0.5f;
         private float _crankTimer = 0f;
 
         public bool IsLightOn => _wantsLightOn && CurrentBattery > 0;
         public float CurrentBattery { get; private set; }
 
+        // ... (ตัวแปร Sway & Collision คงเดิม) ...
         [Header("Sound Settings")]
         [SerializeField] private string _toggleSoundName = "Click";
         [SerializeField] private string _crankSoundName = "FlashlightCrank";
@@ -48,14 +48,9 @@ namespace SyntaxError.Player
         {
             if (_inputManager == null) _inputManager = GetComponentInParent<InputManager>();
             if (_cameraTransform == null && Camera.main != null) _cameraTransform = Camera.main.transform;
-            if (_modelTransform == null)
-            {
-                var found = transform.Find("Model");
-                _modelTransform = found != null ? found : transform;
-            }
 
             _initialRotation = transform.localRotation;
-            CurrentBattery = _maxBattery; // เริ่มมาแบตเต็ม
+            CurrentBattery = _maxBattery;
 
             if (_lightSource != null)
             {
@@ -63,12 +58,31 @@ namespace SyntaxError.Player
                 _lightSource.enabled = IsLightOn;
             }
 
-            // สั่งอัปเดต UI ตั้งแต่เริ่มเกม
+            // [Added] ลงทะเบียนกับ LoopManager
+            if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
+
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
                 UIManager.Instance.SetFlashlightState(IsLightOn);
             }
+        }
+
+        private void OnDestroy()
+        {
+            // [Added] ถอนการลงทะเบียน
+            if (LoopManager.Instance != null) LoopManager.Instance.Unregister(this);
+        }
+
+        // [New Function] รีเซ็ตแบตเตอรี่เมื่อเริ่มลูปใหม่
+        public void OnLoopReset(int currentLoop)
+        {
+            CurrentBattery = _maxBattery;
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
+            }
+            Debug.Log("[Flashlight] Battery Refilled on Reset.");
         }
 
         private void Update()
@@ -83,62 +97,40 @@ namespace SyntaxError.Player
         {
             if (_crankTimer > 0f) _crankTimer -= Time.deltaTime;
 
-            // 1. ระบบกดปั่นไฟ (เพิ่ม 20% ต่อ 1 คลิก)
             if (_inputManager.IsCranking && !_wasCranking && _crankTimer <= 0f)
             {
-                // บวกแบตเพิ่มทีละ 20%
                 CurrentBattery += (_maxBattery * 0.2f);
                 if (CurrentBattery > _maxBattery) CurrentBattery = _maxBattery;
-
                 _crankTimer = _crankCooldown;
 
                 if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX(_crankSoundName);
+                if (UIManager.Instance != null) { UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery); UIManager.Instance.ShowBatteryTemp(); }
 
-                // --- เรียกโชว์ UI แบตเตอรี่ ---
-                if (UIManager.Instance != null)
-                {
-                    UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
-                    UIManager.Instance.ShowBatteryTemp(); // โชว์ 3 วิ แล้วค่อย Fade
-                }
-
-                // ถ้าผู้เล่นเคยตั้งใจกดเปิดไฟค้างไว้ พอปั่นแบตมีแล้วไฟก็จะติดขึ้นมาเอง
                 if (_wantsLightOn && _lightSource != null && !_lightSource.enabled)
                 {
                     _lightSource.enabled = true;
                     if (UIManager.Instance != null) UIManager.Instance.SetFlashlightState(true);
                 }
             }
-
             _wasCranking = _inputManager.IsCranking;
 
-            // 2. ระบบแบตลด
             if (IsLightOn)
             {
                 CurrentBattery -= _drainRate * Time.deltaTime;
-
-                // อัปเดต UI แบตเตอรี่แบบเรียลไทม์ (หลอดจะค่อยๆ ลดทีละก้อน)
                 if (UIManager.Instance != null) UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
-
                 if (CurrentBattery <= 0)
                 {
                     CurrentBattery = 0;
                     if (_lightSource != null) _lightSource.enabled = false;
-
-                    // แบตหมด ไฟดับ -> สั่ง UI ให้เริ่ม Fade หายไปเลย
                     if (UIManager.Instance != null) UIManager.Instance.SetFlashlightState(false);
                 }
             }
 
-            // 3. หรี่ไฟตอนแบตใกล้หมด (เหลือ 1 ก้อนสุดท้าย)
             if (IsLightOn && _lightSource != null)
             {
                 float batteryPercent = CurrentBattery / _maxBattery;
                 _lightSource.intensity = _initialIntensity * batteryPercent;
-
-                if (batteryPercent < 0.2f)
-                {
-                    _lightSource.intensity += Random.Range(-0.2f, 0.2f);
-                }
+                if (batteryPercent < 0.2f) _lightSource.intensity += Random.Range(-0.2f, 0.2f);
             }
         }
 
@@ -156,13 +148,7 @@ namespace SyntaxError.Player
             _wantsLightOn = !_wantsLightOn;
             if (_lightSource != null) _lightSource.enabled = IsLightOn;
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX(_toggleSoundName);
-
-            // --- อัปเดต UI เวลาเปิด/ปิดไฟฉาย ---
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery);
-                UIManager.Instance.SetFlashlightState(IsLightOn);
-            }
+            if (UIManager.Instance != null) { UIManager.Instance.UpdateBatteryUI(CurrentBattery, _maxBattery); UIManager.Instance.SetFlashlightState(IsLightOn); }
         }
 
         private void HandleSway()
@@ -184,11 +170,7 @@ namespace SyntaxError.Player
             Vector3 direction = desiredWorldPos - origin;
             float baselineDist = direction.magnitude;
 
-            if (baselineDist <= 0.0001f)
-            {
-                SetFlashlightWorldPosition(desiredWorldPos);
-                return;
-            }
+            if (baselineDist <= 0.0001f) { SetFlashlightWorldPosition(desiredWorldPos); return; }
 
             Vector3 baselineDir = direction / baselineDist;
             float effectiveBaselineDist = Mathf.Min(baselineDist, _maxDistanceFromCamera);
@@ -206,31 +188,11 @@ namespace SyntaxError.Player
                 if (currentDistAlong <= targetDist) targetWorldPos = currentWorldPos;
                 else targetWorldPos = origin + baselineDir * targetDist;
             }
-            else
-            {
-                if (baselineDist > _maxDistanceFromCamera) targetWorldPos = origin + baselineDir * _maxDistanceFromCamera;
-                else targetWorldPos = desiredWorldPos;
-            }
+            else { targetWorldPos = (baselineDist > _maxDistanceFromCamera) ? origin + baselineDir * _maxDistanceFromCamera : desiredWorldPos; }
             SetFlashlightWorldPositionSmooth(targetWorldPos);
         }
 
-        private void SetFlashlightWorldPosition(Vector3 worldPos)
-        {
-            if (transform.parent == _cameraTransform) transform.localPosition = _cameraTransform.InverseTransformPoint(worldPos);
-            else transform.position = worldPos;
-        }
-
-        private void SetFlashlightWorldPositionSmooth(Vector3 worldPos)
-        {
-            if (transform.parent == _cameraTransform)
-            {
-                Vector3 targetLocal = _cameraTransform.InverseTransformPoint(worldPos);
-                transform.localPosition = Vector3.SmoothDamp(transform.localPosition, targetLocal, ref _positionVelocity, 1f / Mathf.Max(0.0001f, _positionSmoothSpeed));
-            }
-            else
-            {
-                transform.position = Vector3.SmoothDamp(transform.position, worldPos, ref _positionVelocity, 1f / Mathf.Max(0.0001f, _positionSmoothSpeed));
-            }
-        }
+        private void SetFlashlightWorldPosition(Vector3 worldPos) { if (transform.parent == _cameraTransform) transform.localPosition = _cameraTransform.InverseTransformPoint(worldPos); else transform.position = worldPos; }
+        private void SetFlashlightWorldPositionSmooth(Vector3 worldPos) { if (transform.parent == _cameraTransform) { Vector3 targetLocal = _cameraTransform.InverseTransformPoint(worldPos); transform.localPosition = Vector3.SmoothDamp(transform.localPosition, targetLocal, ref _positionVelocity, 1f / Mathf.Max(0.0001f, _positionSmoothSpeed)); } else { transform.position = Vector3.SmoothDamp(transform.position, worldPos, ref _positionVelocity, 1f / Mathf.Max(0.0001f, _positionSmoothSpeed)); } }
     }
 }
