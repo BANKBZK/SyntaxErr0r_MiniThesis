@@ -30,6 +30,7 @@ namespace SyntaxError.Enemy
 
         [Header("AI State (For Debug)")]
         public AIState CurrentState = AIState.Idle;
+        public bool isEnemyCanKill = true;
 
         [Header("Opportunity System (RNG)")]
         [Range(1, 20)]
@@ -554,7 +555,12 @@ namespace SyntaxError.Enemy
         private void CatchPlayer()
         {
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
-            // นายควรเรียกใช้ระบบ Game Over หรือ Reset ตรงนี้
+
+            // [เพิ่มโค้ดส่วนนี้] สั่งให้เกม Reset กลับไปที่ Loop 0 ทันที
+            if (LoopManager.Instance != null && isEnemyCanKill)
+            {
+                LoopManager.Instance.FullGameReset();
+            }
         }
 
         public void WakeUp(Vector3? warpPos = null)

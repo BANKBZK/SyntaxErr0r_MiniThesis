@@ -366,6 +366,7 @@ MonoBehaviour:
   _playerInput: {fileID: 0}
   _playerFlashlight: {fileID: 0}
   CurrentState: 1
+  isEnemyCanKill: 1
   _aiLevel: 12
   _idleTimeMin: 3
   _idleTimeMax: 5
