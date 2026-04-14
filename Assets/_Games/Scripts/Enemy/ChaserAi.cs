@@ -234,6 +234,7 @@ namespace SyntaxError.Enemy
 
                 case AIState.Chase:
                     _stateTimer = _maxChaseTime;
+                    // [แก้ไข] ส่งตำแหน่งผู้เล่นไปหาจุดที่เดินได้จริง
                     SafeSetDestination(_playerTransform.position);
                     if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
                         SoundManager.Instance.PlayMusic(_chaseMusic);
@@ -383,6 +384,7 @@ namespace SyntaxError.Enemy
                     break;
 
                 case AIState.Chase:
+                    // [แก้ไข] สั่งให้ AI เดินตามผู้เล่นอ้อมสิ่งกีดขวางผ่าน NavMesh
                     SafeSetDestination(_playerTransform.position);
                     _stateTimer -= Time.deltaTime;
                     if (_stateTimer <= 0f) { ChangeState(AIState.Flee); break; }
@@ -478,9 +480,25 @@ namespace SyntaxError.Enemy
             if (!foundValidSpot) SafeSetDestination(_playerTransform.position);
         }
 
+        // ==========================================
+        // [แก้ไขใหม่] ฟังก์ชันสั่งเดินแบบปลอดภัย
+        // ==========================================
         private void SafeSetDestination(Vector3 targetPos)
         {
-            if (_agent != null && _agent.isOnNavMesh) _agent.SetDestination(targetPos);
+            if (_agent != null && _agent.isOnNavMesh)
+            {
+                // ค้นหาจุดบน NavMesh ที่ใกล้กับตำแหน่งเป้าหมายที่สุดในระยะ 2 เมตร
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(targetPos, out hit, 2.0f, NavMesh.AllAreas))
+                {
+                    _agent.SetDestination(hit.position);
+                }
+                else
+                {
+                    // Fallback กรณีหาจุดใกล้ไม่เจอ ให้ลองสั่งเดินไปที่ตำแหน่งเดิม
+                    _agent.SetDestination(targetPos);
+                }
+            }
         }
 
         private bool CheckIfPlayerLooking()

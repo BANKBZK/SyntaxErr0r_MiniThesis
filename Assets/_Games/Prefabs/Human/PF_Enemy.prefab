@@ -384,13 +384,13 @@ MonoBehaviour:
   _currentStunTime: 0
   _crankHearingRadius: 20
   _sprintHearingRadius: 8
-  _walkHearingRadius: 5
+  _walkHearingRadius: 6
   _stalkStartSound: GhostWhisper
   _chaseMusic: ChaseTheme
   _stalkSoundCooldown: 15
   _patrolSpeed: 1.2
   _stalkSpeed: 3.5
-  _chaseSpeed: 5.5
+  _chaseSpeed: 5
   _fleeSpeed: 8
   _killDistance: 1.6
   _maxChaseTime: 10

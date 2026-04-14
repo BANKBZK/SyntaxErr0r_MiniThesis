@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 2975407796540419083}
   - component: {fileID: 1010481440243996040}
   - component: {fileID: 1626192248556053624}
+  - component: {fileID: 8630747038173252992}
+  - component: {fileID: 3534288131157805083}
   m_Layer: 0
   m_Name: PF_GameManager
   m_TagString: Untagged
@@ -86,21 +88,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 55
+  _chance: 100
   _safeLoops: 0000000004000000
   _allAnomalies:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
 --- !u!114 &2975407796540419083
 MonoBehaviour:
@@ -232,6 +222,41 @@ MonoBehaviour:
     pitch: 1
     loop: 0
     source: {fileID: 0}
+  - name: ScreamANT
+    type: 1
+    clip: {fileID: 8300000, guid: ef6f3ceb45102034eac340f668c886ce, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: TVNoise
+    type: 1
+    clip: {fileID: 8300000, guid: 3c5345478e2660745a8c0f7494632d19, type: 3}
+    volume: 0.296
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+  - name: Windows
+    type: 1
+    clip: {fileID: 8300000, guid: 0e58a7492b927924cac190c960ce10fc, type: 3}
+    volume: 0.296
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: Jumpscare2
+    type: 1
+    clip: {fileID: 8300000, guid: dccc20ce1a1b9474e8182a3e0e69964d, type: 3}
+    volume: 0.46
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: DoorMoving
+    type: 1
+    clip: {fileID: 8300000, guid: 7730c71c49875ec4e914e2b1d8ea3a11, type: 3}
+    volume: 0.65
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
 --- !u!114 &1010481440243996040
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -293,7 +318,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _chaserAI: {fileID: 0}
   _ritualZoneEnvironment: {fileID: 0}
-  totalItemsNeeded: 3
   _spawnPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -305,5 +329,47 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  _itemsHolding: 0
-  _itemsPlaced: 0
+--- !u!114 &8630747038173252992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8388515180496024119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edcb46bb450745d48855a358091c0bae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _loopObjects:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+--- !u!114 &3534288131157805083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8388515180496024119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edcb46bb450745d48855a358091c0bae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _loopObjects:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
