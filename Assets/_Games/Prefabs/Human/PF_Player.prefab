@@ -732,8 +732,8 @@ MonoBehaviour:
   _modelTransform: {fileID: 3322955477471866570}
   _wantsLightOn: 0
   _maxBattery: 100
-  _drainRate: 8
-  _crankCooldown: 1.5
+  _drainRate: 4
+  _crankCooldown: 6.5
   _toggleSoundName: Click
   _crankSoundName: FlashlightCrank
   _swaySpeed: 5
