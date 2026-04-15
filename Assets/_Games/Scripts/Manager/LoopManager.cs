@@ -55,16 +55,13 @@ namespace SyntaxError.Managers
         {
             if (_isTeleporting) return;
 
-            // 1. ล้างความทรงจำเนื้อเรื่องทั้งหมด
+            // 1. ล้างความทรงจำเนื้อเรื่องทั้งหมด (เพื่อให้เนื้อเรื่องเริ่มใหม่)
             StoryTrigger.ResetAllStoryMemory();
 
-            // 2. เติม "ถุงสุ่ม Anomaly" ให้เต็มอีกครั้ง (อนุญาตให้สุ่มเจอของเดิมได้แล้ว เพราะเริ่มเกมใหม่)
-            if (AnomalyManager.Instance != null)
-            {
-                AnomalyManager.Instance.ResetAnomalyPool();
-            }
+            // *** เอา AnomalyManager.Instance.ResetAnomalyPool() ออกจากตรงนี้ ***
+            // เพื่อให้มันจำว่าเคยสุ่มอะไรไปแล้ว ผู้เล่นจะได้เจอของใหม่ๆ ต่อไป
 
-            // 3. สั่งเริ่มลำดับการวาร์ปโดยส่งค่า false
+            // 2. สั่งเริ่มลำดับการวาร์ปโดยส่งค่า false (เพื่อเตะกลับไป Loop 0)
             StartCoroutine(TeleportSequence(false));
         }
 
