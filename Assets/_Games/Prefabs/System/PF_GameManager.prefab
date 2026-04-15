@@ -52,7 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentLoop: 0
-  IsPuzzleSolved: 1
+  IsPuzzleSolved: 0
   IsRitualComplete: 0
 --- !u!114 &4393276515357542867
 MonoBehaviour:
@@ -88,10 +88,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 100
+  _chance: 51
   _safeLoops: 0000000004000000
   _allAnomalies:
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  _availableAnomalies: []
 --- !u!114 &2975407796540419083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -217,7 +243,7 @@ MonoBehaviour:
     source: {fileID: 0}
   - name: BrokenLightBulb
     type: 1
-    clip: {fileID: 8300000, guid: d6a57ea29d0f03f44b598cd2b376cedc, type: 3}
+    clip: {fileID: 8300000, guid: 074ec6cd777f9484588cc8e36ac82525, type: 3}
     volume: 1
     pitch: 1
     loop: 0
@@ -253,6 +279,13 @@ MonoBehaviour:
   - name: DoorMoving
     type: 1
     clip: {fileID: 8300000, guid: 7730c71c49875ec4e914e2b1d8ea3a11, type: 3}
+    volume: 0.65
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: WeirdRoomAmbient
+    type: 1
+    clip: {fileID: 8300000, guid: 92820b0df0d496a4f94d53ca0cc20a38, type: 3}
     volume: 0.65
     pitch: 1
     loop: 0
@@ -318,6 +351,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _chaserAI: {fileID: 0}
   _ritualZoneEnvironment: {fileID: 0}
+  totalItemsNeeded: 3
   _spawnPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -329,6 +363,8 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  _itemsHolding: 0
+  _itemsPlaced: 0
 --- !u!114 &8630747038173252992
 MonoBehaviour:
   m_ObjectHideFlags: 0

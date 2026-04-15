@@ -9,7 +9,7 @@ namespace SyntaxError.Managers
 
         [Header("Settings")]
         [Range(0, 100)]
-        [SerializeField] private int _chance = 40;
+        [SerializeField] private int _chance = 51;
 
         [Tooltip("Loop ที่ห้ามมีผี (เช่น Loop 0 Tutorial)")]
         [SerializeField] private List<int> _safeLoops = new List<int>() { 0 };
@@ -17,6 +17,9 @@ namespace SyntaxError.Managers
         [Header("References")]
         [Tooltip("ลาก GameObject ใน Scene มาใส่เท่านั้น (ห้ามใส่ Prefab)")]
         [SerializeField] private List<Anomaly.AnomalyObject> _allAnomalies;
+
+        // 🎒 ถุงสุ่ม (เก็บรายชื่อที่ยังไม่เคยโผล่)
+        [SerializeField] private List<Anomaly.AnomalyObject> _availableAnomalies = new List<Anomaly.AnomalyObject>();
 
         public bool IsAnomalyActive { get; private set; }
 
@@ -28,24 +31,35 @@ namespace SyntaxError.Managers
 
         private void Start()
         {
-            // เริ่มเกม: บังคับ Reset ทุกตัวให้เป็น Normal ทันที
+            // เติมของลงถุงสุ่มตอนเริ่มเกม
+            ResetAnomalyPool();
+
             ForceResetAll();
             IsAnomalyActive = false;
         }
 
+        // ==============================================
+        // 🔄 ฟังก์ชันสำหรับเติม Anomaly ให้เต็มถุงอีกครั้ง (เรียกตอนโดน Hard Reset)
+        // ==============================================
+        public void ResetAnomalyPool()
+        {
+            if (_allAnomalies == null) return;
+
+            _availableAnomalies.Clear();
+            _availableAnomalies.AddRange(_allAnomalies);
+            Debug.Log($"[AnomalyManager] รีเซ็ตถุงสุ่มใหม่แล้ว! มี Anomaly พร้อมใช้งาน {_availableAnomalies.Count} ตัว");
+        }
+
         public void ProcessLoop(int currentLoop)
         {
-            // 1. ล้างสถานะเก่า
             ForceResetAll();
 
-            // 2. เช็ค Safe Loop (เช่น Loop 0)
             if (_safeLoops.Contains(currentLoop))
             {
                 IsAnomalyActive = false;
-                return; // จบงาน ไม่สุ่ม
+                return;
             }
 
-            // 3. สุ่ม RNG
             int roll = Random.Range(0, 100);
             if (roll < _chance)
             {
@@ -62,13 +76,22 @@ namespace SyntaxError.Managers
         {
             if (_allAnomalies == null || _allAnomalies.Count == 0) return;
 
-            // สุ่มเลือก 1 ตัว
-            int index = Random.Range(0, _allAnomalies.Count);
-            var target = _allAnomalies[index];
+            // ⚠️ ป้องกันกรณีผู้เล่นวนลูปผิดหลายรอบจนของในถุงหมด ให้เติมของใหม่เลยกันเกมบั๊ก
+            if (_availableAnomalies.Count == 0)
+            {
+                Debug.Log("[AnomalyManager] Anomaly หมดถุงแล้ว! ทำการเติมให้ใหม่...");
+                ResetAnomalyPool();
+            }
+
+            // สุ่มจากลิสต์ "ถุงสุ่ม" ที่ยังไม่เคยออก
+            int index = Random.Range(0, _availableAnomalies.Count);
+            var target = _availableAnomalies[index];
+
+            // 🌟 ทิ้งตัวที่สุ่มได้ออกจากถุงสุ่ม เพื่อไม่ให้โผล่ซ้ำ!
+            _availableAnomalies.RemoveAt(index);
 
             if (target != null)
             {
-                // Safety Check: กันคนลาก Prefab มาใส่ (เตือนใน Console)
                 if (target.gameObject.scene.name == null)
                 {
                     Debug.LogError($"[AnomalyManager] Error: '{target.name}' is a Prefab! Please assign the Scene Object.");
@@ -76,7 +99,7 @@ namespace SyntaxError.Managers
                 }
 
                 target.ActivateAnomaly();
-                Debug.Log($"Anomaly Spawned: {target.name}");
+                Debug.Log($"Anomaly Spawned: {target.name} (เหลือในถุงสุ่มอีก {_availableAnomalies.Count} แบบ)");
             }
         }
 

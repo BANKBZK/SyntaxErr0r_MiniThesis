@@ -6,7 +6,7 @@ using SyntaxError.Player;
 using SyntaxError.Interaction;
 using SyntaxError.Ritual;
 using UnityEngine.SceneManagement;
-using SyntaxError.Story; // [Added] เพื่อเรียกใช้ StoryTrigger
+using SyntaxError.Story;
 
 namespace SyntaxError.Managers
 {
@@ -48,7 +48,9 @@ namespace SyntaxError.Managers
         public void Register(IResettable obj) { if (!_resettableObjects.Contains(obj)) _resettableObjects.Add(obj); }
         public void Unregister(IResettable obj) { if (_resettableObjects.Contains(obj)) _resettableObjects.Remove(obj); }
 
-        // [New Function] สำหรับการตายหรือรีเซ็ตเกมทั้งหมด
+        // ===========================================
+        // 💀 Hard Reset (ตาย หรือ เริ่มเกมใหม่ทั้งหมด)
+        // ===========================================
         public void FullGameReset()
         {
             if (_isTeleporting) return;
@@ -56,10 +58,19 @@ namespace SyntaxError.Managers
             // 1. ล้างความทรงจำเนื้อเรื่องทั้งหมด
             StoryTrigger.ResetAllStoryMemory();
 
-            // 2. สั่งเริ่มลำดับการวาร์ปโดยส่งค่า false (เพื่อ Reset Loop)
+            // 2. เติม "ถุงสุ่ม Anomaly" ให้เต็มอีกครั้ง (อนุญาตให้สุ่มเจอของเดิมได้แล้ว เพราะเริ่มเกมใหม่)
+            if (AnomalyManager.Instance != null)
+            {
+                AnomalyManager.Instance.ResetAnomalyPool();
+            }
+
+            // 3. สั่งเริ่มลำดับการวาร์ปโดยส่งค่า false
             StartCoroutine(TeleportSequence(false));
         }
 
+        // ===========================================
+        // 🚪 Soft Reset (ทายถูก / ทายผิดประตู)
+        // ===========================================
         public void SubmitVote(bool votedAnomaly)
         {
             if (_isTeleporting) return;
@@ -89,6 +100,7 @@ namespace SyntaxError.Managers
                 }
                 else
                 {
+                    // Soft Reset ทายผิด กลับลูป 0 แต่อย่างอื่นไม่รีเซ็ต
                     GameManager.Instance.ResetToZero();
                     if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("Wrong");
                 }
@@ -118,6 +130,8 @@ namespace SyntaxError.Managers
 
             ExitDoor[] exits = FindObjectsByType<ExitDoor>(FindObjectsSortMode.None);
             foreach (var exit in exits) exit.ResetDoor();
+
+            // ประมวลผลและสุ่ม Anomaly ใหม่
             if (AnomalyManager.Instance != null) AnomalyManager.Instance.ProcessLoop(loop);
 
             yield return null;
