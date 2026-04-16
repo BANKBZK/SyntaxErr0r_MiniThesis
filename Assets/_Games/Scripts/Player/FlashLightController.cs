@@ -99,7 +99,7 @@ namespace SyntaxError.Player
 
             if (_inputManager.IsCranking && !_wasCranking && _crankTimer <= 0f)
             {
-                CurrentBattery += (_maxBattery * 0.2f);
+                CurrentBattery += (_maxBattery * 0.4f);
                 if (CurrentBattery > _maxBattery) CurrentBattery = _maxBattery;
                 _crankTimer = _crankCooldown;
 

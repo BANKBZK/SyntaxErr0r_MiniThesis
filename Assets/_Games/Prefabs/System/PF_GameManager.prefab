@@ -89,9 +89,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4292e4b31dfe08e4ca7edac748458435, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _chance: 51
+  _chance: 100
   _safeLoops: 0000000004000000
   _allAnomalies:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -291,6 +295,13 @@ MonoBehaviour:
     pitch: 1
     loop: 0
     source: {fileID: 0}
+  - name: Neckcrack
+    type: 1
+    clip: {fileID: 8300000, guid: 31a7e60dd3ef4e74dbb63eed235832df, type: 3}
+    volume: 0.77
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
 --- !u!114 &1010481440243996040
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -360,7 +371,16 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   _ritualItems:
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
