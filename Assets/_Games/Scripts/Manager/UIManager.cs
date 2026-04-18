@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using SyntaxError.Inputs;
-using SyntaxError.Story;
-using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
+using System.Collections;
+using System.Collections.Generic; // เพิ่มเข้ามาเพื่อใช้งาน Queue
+using SyntaxError.Inputs;
 using UnityEngine.SceneManagement;
+using SyntaxError.Story;
 using UnityEngine.UI;
 
 namespace SyntaxError.Managers
@@ -60,13 +60,27 @@ namespace SyntaxError.Managers
         public float fadeDuration = 1.0f;
 
         private InputSystem_Actions _inputActions;
-        private bool _isGameStarted = false;
+
+        // [แก้ไข] เปลี่ยนเป็น Public Property เพื่อให้ Script อื่นๆ (เช่น StoryTrigger) เช็คได้ว่าเริ่มเกมหรือยัง
+        public bool IsGameStarted { get; private set; } = false;
+
         private bool _isPaused = false;
         private bool _isTransitioning = false;
 
         [Header("Story UI")]
         public TextMeshProUGUI storyText;
         public float storyFadeSpeed = 1.5f;
+
+        // ------------------------------------------
+        // [เพิ่ม] ระบบคิวของ Story Message
+        // ------------------------------------------
+        private struct StoryMessage
+        {
+            public string text;
+            public float duration;
+        }
+        private Queue<StoryMessage> _storyQueue = new Queue<StoryMessage>();
+        private bool _isDisplayingStory = false;
 
         [Header("Exhaustion VFX")]
         public CanvasGroup exhaustionUI;
@@ -109,12 +123,9 @@ namespace SyntaxError.Managers
             UpdateLoopDisplay(0);
             if (batteryCanvasGroup != null) batteryCanvasGroup.alpha = 0f;
 
-            LoadSettings(); // โหลดค่า Settings ตอนเริ่มเกม
+            LoadSettings();
         }
 
-        // ==========================================
-        // 💾 ระบบโหลดและเซฟ Settings
-        // ==========================================
         private void LoadSettings()
         {
             // --- General ---
@@ -126,10 +137,9 @@ namespace SyntaxError.Managers
             ApplyGraphicsQuality();
 
             // --- Audio ---
-            // --- Audio ---
             float masterVol = PlayerPrefs.GetFloat("MasterVolume", 1f);
             if (masterSlider) masterSlider.value = masterVol;
-            OnMasterVolumeChanged(masterVol); // เรียกฟังก์ชันให้ Mixer อัปเดตทันที
+            OnMasterVolumeChanged(masterVol);
 
             float sfxVol = PlayerPrefs.GetFloat("SFXVolume", 1f);
             if (sfxSlider) sfxSlider.value = sfxVol;
@@ -144,9 +154,6 @@ namespace SyntaxError.Managers
             OnUIVolumeChanged(uiVol);
         }
 
-        // ==========================================
-        // 🖱️ ฟังก์ชันของหน้า GENERAL (Mouse Sensitivity)
-        // ==========================================
         public void IncreaseSensitivity()
         {
             if (_currentSensitivity < maxSensitivity)
@@ -174,7 +181,6 @@ namespace SyntaxError.Managers
             if (mouseSensitivityText != null)
                 mouseSensitivityText.text = _currentSensitivity.ToString();
 
-            // ค้นหา CameraController ในฉากและเปลี่ยนความเร็วให้แบบ Real-Time ทันที
             SyntaxError.Player.CameraController cam = Object.FindFirstObjectByType<SyntaxError.Player.CameraController>();
             if (cam != null)
             {
@@ -182,9 +188,6 @@ namespace SyntaxError.Managers
             }
         }
 
-        // ==========================================
-        // 🖥️ ฟังก์ชันของหน้า VIDEO (Graphics Quality)
-        // ==========================================
         public void NextGraphicsQuality()
         {
             _graphicsQualityIndex++;
@@ -211,9 +214,7 @@ namespace SyntaxError.Managers
             if (graphicsQualityText != null)
                 graphicsQualityText.text = _qualityNames[_graphicsQualityIndex];
         }
-        // ==========================================
-        // 🔊 ฟังก์ชันของหน้า AUDIO (Volume Sliders)
-        // ==========================================
+
         public void OnMasterVolumeChanged(float value)
         {
             PlayerPrefs.SetFloat("MasterVolume", value);
@@ -238,12 +239,9 @@ namespace SyntaxError.Managers
             if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("UIVol", value);
         }
 
-        // ==========================================
-        // UI & Game Flow Methods
-        // ==========================================
         private void ShowMainMenu()
         {
-            _isGameStarted = false;
+            IsGameStarted = false;
             if (_playerInput != null) _playerInput.enabled = false;
 
             if (mainMenuUI != null) mainMenuUI.SetActive(true);
@@ -263,7 +261,7 @@ namespace SyntaxError.Managers
 
         public void OnStartGame()
         {
-            if (_isTransitioning || _isGameStarted) return;
+            if (_isTransitioning || IsGameStarted) return;
             StartCoroutine(StartGameSequence());
         }
 
@@ -278,7 +276,7 @@ namespace SyntaxError.Managers
                 yield return StartCoroutine(FadeRoutine(0f, 1f));
             }
 
-            _isGameStarted = true;
+            IsGameStarted = true;
             if (mainMenuUI != null) mainMenuUI.SetActive(false);
             if (optionUI != null) optionUI.SetActive(false);
             if (creditUI != null) creditUI.SetActive(false);
@@ -311,7 +309,7 @@ namespace SyntaxError.Managers
                 return;
             }
 
-            if (_isGameStarted)
+            if (IsGameStarted)
             {
                 if (_isPaused) ResumeGame();
                 else PauseGame();
@@ -344,7 +342,7 @@ namespace SyntaxError.Managers
         {
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UIPress");
 
-            if (!_isGameStarted)
+            if (!IsGameStarted)
             {
                 if (mainMenuUI != null) mainMenuUI.SetActive(false);
             }
@@ -362,7 +360,7 @@ namespace SyntaxError.Managers
             if (SoundManager.Instance != null) SoundManager.Instance.PlaySFX("UICancelPress");
             if (optionUI != null) optionUI.SetActive(false);
 
-            if (!_isGameStarted)
+            if (!IsGameStarted)
             {
                 if (mainMenuUI != null) mainMenuUI.SetActive(true);
             }
@@ -464,38 +462,41 @@ namespace SyntaxError.Managers
         {
             if (loopText != null) loopText.text = $"Loop : {currentLoop}";
         }
-        private struct StoryMessage
-        {
-            public string text;
-            public float duration;
-        }
-        private Queue<StoryMessage> _storyQueue = new Queue<StoryMessage>();
-        private bool _isDisplayingStory = false;
+
+        // ==========================================
+        // 📜 Story UI & Queue System
+        // ==========================================
         public void ShowStoryText(string text, float duration)
         {
-            // จับข้อความยัดลงคิว
+            // จับข้อความใส่คิวเอาไว้ก่อน
             _storyQueue.Enqueue(new StoryMessage { text = text, duration = duration });
 
-            // ถ้ายังไม่มีคิวไหนเล่นอยู่ ให้เริ่มเล่น
+            // ถ้ายังไม่มีข้อความไหนกำลังโชว์อยู่ ให้เริ่มรันคิวเลย
             if (!_isDisplayingStory)
             {
                 StartCoroutine(ProcessStoryQueue());
             }
         }
+
         private IEnumerator ProcessStoryQueue()
         {
             _isDisplayingStory = true;
 
+            // รันไปเรื่อยๆ จนกว่าคิวจะหมด
             while (_storyQueue.Count > 0)
             {
                 StoryMessage currentMsg = _storyQueue.Dequeue();
+
+                // รอให้ข้อความนี้แสดงและ Fade หายไปจนเสร็จ
                 yield return StartCoroutine(StoryTextRoutine(currentMsg.text, currentMsg.duration));
-                // พักหายใจ 0.5 วินาทีก่อนขึ้นข้อความถัดไป (ถ้ามี)
+
+                // พักหน้าจอโล่งๆ แป๊บนึงก่อนขึ้นข้อความถัดไป จะได้อ่านง่ายขึ้น
                 yield return new WaitForSeconds(0.5f);
             }
 
             _isDisplayingStory = false;
         }
+
         private IEnumerator StoryTextRoutine(string text, float duration)
         {
             if (storyText == null) yield break;
@@ -507,7 +508,6 @@ namespace SyntaxError.Managers
             color.a = 0f;
             storyText.color = color;
 
-            // Fade In
             float t = 0;
             while (t < 1f)
             {
@@ -517,10 +517,8 @@ namespace SyntaxError.Managers
                 yield return null;
             }
 
-            // ค้างข้อความไว้
             yield return new WaitForSeconds(duration);
 
-            // Fade Out
             t = 1f;
             while (t > 0f)
             {
@@ -533,6 +531,9 @@ namespace SyntaxError.Managers
             storyText.gameObject.SetActive(false);
         }
 
+        // ==========================================
+        // VFX & Debug UI
+        // ==========================================
         public void ToggleExhaustionEffect(bool isExhausted)
         {
             if (isExhausted)
