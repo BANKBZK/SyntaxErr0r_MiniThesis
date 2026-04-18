@@ -1,10 +1,11 @@
-﻿using UnityEngine;
-using UnityEngine.InputSystem;
-using TMPro;
-using System.Collections;
+﻿using System.Collections;
+using System.Collections.Generic;
 using SyntaxError.Inputs;
-using UnityEngine.SceneManagement;
 using SyntaxError.Story;
+using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace SyntaxError.Managers
@@ -463,13 +464,38 @@ namespace SyntaxError.Managers
         {
             if (loopText != null) loopText.text = $"Loop : {currentLoop}";
         }
-
+        private struct StoryMessage
+        {
+            public string text;
+            public float duration;
+        }
+        private Queue<StoryMessage> _storyQueue = new Queue<StoryMessage>();
+        private bool _isDisplayingStory = false;
         public void ShowStoryText(string text, float duration)
         {
-            StopAllCoroutines();
-            StartCoroutine(StoryTextRoutine(text, duration));
-        }
+            // จับข้อความยัดลงคิว
+            _storyQueue.Enqueue(new StoryMessage { text = text, duration = duration });
 
+            // ถ้ายังไม่มีคิวไหนเล่นอยู่ ให้เริ่มเล่น
+            if (!_isDisplayingStory)
+            {
+                StartCoroutine(ProcessStoryQueue());
+            }
+        }
+        private IEnumerator ProcessStoryQueue()
+        {
+            _isDisplayingStory = true;
+
+            while (_storyQueue.Count > 0)
+            {
+                StoryMessage currentMsg = _storyQueue.Dequeue();
+                yield return StartCoroutine(StoryTextRoutine(currentMsg.text, currentMsg.duration));
+                // พักหายใจ 0.5 วินาทีก่อนขึ้นข้อความถัดไป (ถ้ามี)
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            _isDisplayingStory = false;
+        }
         private IEnumerator StoryTextRoutine(string text, float duration)
         {
             if (storyText == null) yield break;
@@ -481,6 +507,7 @@ namespace SyntaxError.Managers
             color.a = 0f;
             storyText.color = color;
 
+            // Fade In
             float t = 0;
             while (t < 1f)
             {
@@ -490,8 +517,10 @@ namespace SyntaxError.Managers
                 yield return null;
             }
 
+            // ค้างข้อความไว้
             yield return new WaitForSeconds(duration);
 
+            // Fade Out
             t = 1f;
             while (t > 0f)
             {
