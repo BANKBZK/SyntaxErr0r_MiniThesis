@@ -327,10 +327,10 @@ MonoBehaviour:
   m_Children: []
   m_Clips:
   - m_Version: 1
-    m_Start: 3.7686497010290623
+    m_Start: 0
     m_ClipIn: 0
-    m_Asset: {fileID: -556913970272288866}
-    m_Duration: 5.825306122448979
+    m_Asset: {fileID: -1395261125846493958}
+    m_Duration: 20.202666666666666
     m_TimeScale: 1
     m_ParentTrack: {fileID: -6537858521186736883}
     m_EaseInDuration: 0
@@ -394,7 +394,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: Enemy_StalkSound
+    m_DisplayName: BGMBadEnding
   m_Markers:
     m_Objects: []
   m_TrackProperties:
@@ -747,6 +747,23 @@ AnimationClip:
   m_HasGenericRootTransform: 1
   m_HasMotionFloatCurves: 0
   m_Events: []
+--- !u!114 &-1395261125846493958
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f10dd60657c6004587f237a7e90f8e4, type: 3}
+  m_Name: AudioPlayableAsset
+  m_EditorClassIdentifier: 
+  m_Clip: {fileID: 8300000, guid: 8ed72063170751b4480ab51ba570097a, type: 3}
+  m_Loop: 0
+  m_bufferingTime: 0.1
+  m_ClipProperties:
+    volume: 1
 --- !u!114 &-1223530235215756361
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -779,23 +796,6 @@ MonoBehaviour:
   VirtualCamera:
     exposedName: f7e1dbf4eff018e488ca92f1a8d8b8e4
     defaultValue: {fileID: 0}
---- !u!114 &-556913970272288866
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f10dd60657c6004587f237a7e90f8e4, type: 3}
-  m_Name: AudioPlayableAsset
-  m_EditorClassIdentifier: 
-  m_Clip: {fileID: 8300000, guid: 3a90328728ca0794ebda6eafce3ec2a0, type: 3}
-  m_Loop: 0
-  m_bufferingTime: 0.1
-  m_ClipProperties:
-    volume: 1
 --- !u!114 &-179564978492952891
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1076,7 +1076,7 @@ MonoBehaviour:
     m_Start: 0
     m_ClipIn: 0
     m_Asset: {fileID: -179564978492952891}
-    m_Duration: 17.393197278911565
+    m_Duration: 20.202666666666666
     m_TimeScale: 1
     m_ParentTrack: {fileID: 2760216228006800842}
     m_EaseInDuration: 0
@@ -1466,25 +1466,7 @@ MonoBehaviour:
     m_BlendOutDuration: -1
     m_MixInCurve:
       serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
+      m_Curve: []
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
