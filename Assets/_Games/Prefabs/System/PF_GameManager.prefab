@@ -110,7 +110,7 @@ MonoBehaviour:
   sfxGroup: {fileID: -8594915061720102456, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
   envGroup: {fileID: 8563733278071181484, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
   uiGroup: {fileID: -1953201747870242765, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
-  musicGroup: {fileID: 0}
+  musicGroup: {fileID: 2201850401128607967, guid: 7dc9541cea1d44949b50e321fd4692e1, type: 2}
   sounds:
   - name: Correct
     type: 0
@@ -310,6 +310,7 @@ MonoBehaviour:
   sfxSlider: {fileID: 0}
   environmentSlider: {fileID: 0}
   uiSlider: {fileID: 0}
+  musicSlider: {fileID: 0}
   loopText: {fileID: 0}
   fadeUI: {fileID: 0}
   fadeDuration: 0

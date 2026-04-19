@@ -51,6 +51,7 @@ namespace SyntaxError.Managers
         public Slider sfxSlider;
         public Slider environmentSlider;
         public Slider uiSlider;
+        public Slider musicSlider;
 
         [Header("HUD Elements")]
         public TextMeshProUGUI loopText;
@@ -152,6 +153,9 @@ namespace SyntaxError.Managers
             float uiVol = PlayerPrefs.GetFloat("UIVolume", 1f);
             if (uiSlider) uiSlider.value = uiVol;
             OnUIVolumeChanged(uiVol);
+            float musicVol = PlayerPrefs.GetFloat("MusicVolume", 1f);
+            if (musicSlider) musicSlider.value = musicVol;
+            OnMusicVolumeChanged(musicVol);
         }
 
         public void IncreaseSensitivity()
@@ -237,6 +241,11 @@ namespace SyntaxError.Managers
         {
             PlayerPrefs.SetFloat("UIVolume", value);
             if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("UIVol", value);
+        }
+        public void OnMusicVolumeChanged(float value)
+        {
+            PlayerPrefs.SetFloat("MusicVolume", value);
+            if (SoundManager.Instance != null) SoundManager.Instance.SetMixerVolume("MusicVol", value);
         }
 
         private void ShowMainMenu()
