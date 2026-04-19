@@ -1,51 +1,78 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using SyntaxError.Managers;
+using SyntaxError.Interfaces; // เพิ่ม IResettable เพื่อให้รับรู้ตอนวาร์ปเปลี่ยนลูป
 
 namespace SyntaxError.Story
 {
     [RequireComponent(typeof(BoxCollider))]
-    public class StoryTrigger : MonoBehaviour
+    public class StoryTrigger : MonoBehaviour, IResettable
     {
+        public enum StoryFrequency
+        {
+            OncePerGame,   // โชว์ครั้งเดียวตลอดทั้งเกม (สำหรับเนื้อเรื่องหลัก)
+            OncePerLoop,   // โชว์ลูปละ 1 ครั้ง (พอวาร์ปขึ้นลูปใหม่ จะกลับมาเดินเหยียบซ้ำได้)
+            Unlimited      // โชว์ทุกครั้งที่เดินมาชน! (มีระบบดีเลย์กันข้อความเด้งรัว)
+        }
+
         [Header("Story Identification")]
-        [Tooltip("ตั้งชื่อ ID ให้ไม่ซ้ำกัน เช่น 'Tut_Move', 'Story_Loop3'")]
+        [Tooltip("ตั้งชื่อ ID ให้ไม่ซ้ำกัน เช่น 'Tut_Move', 'Door_Locked'")]
         [SerializeField] private string _storyID = "Story_01";
 
         [Header("Story Settings (เนื้อเรื่องปกติ)")]
         [TextArea(3, 5)]
         [SerializeField] private string _storyText = "พิมพ์เนื้อเรื่องตรงนี้...";
 
-        [Tooltip("ข้อความนี้จะโผล่ใน Loop ที่เท่าไหร่? (ใส่ -1 เพื่อให้ทำงานได้ทุก Loop จนกว่าจะเคยเล่นไปแล้ว)")]
-        [SerializeField] private int _targetLoop = 0;
+        [Tooltip("ความถี่ในการแสดงข้อความนี้")]
+        [SerializeField] private StoryFrequency _frequency = StoryFrequency.OncePerGame;
 
         [Tooltip("ระยะเวลาที่ข้อความค้างอยู่บนจอ (วินาที)")]
         [SerializeField] private float _displayDuration = 4f;
 
-        [Header("Ending / Ritual Conditions (สำหรับฉากจบ)")]
-        [Tooltip("เปิดใช้งานเพื่อเช็คว่าทำพิธีกรรมเสร็จหรือยัง (ข้ามเนื้อเรื่องปกติ)")]
+        [Header("Loop Conditions (เงื่อนไขการโชว์)")]
+        [Tooltip("ให้ข้อความนี้โชว์ในทุกๆ ลูปเลยหรือไม่? (ติ๊กถูก = โชว์ทุกลูป)")]
+        [SerializeField] private bool _triggerInAllLoops = true;
+
+        [Tooltip("ถ้าไม่ได้ติ๊กทุกลูป จะให้โชว์เฉพาะที่ Loop ไหน?")]
+        [SerializeField] private int _targetLoop = 0;
+
+        [Header("Ending / Ritual Conditions (เช็คฉากจบ)")]
+        [Tooltip("เปิดใช้งานเพื่อเช็คว่าทำพิธีเสร็จหรือยัง (จะข้ามข้อความปกติไปเลย)")]
         [SerializeField] private bool _checkRitualStatus = false;
 
-        [Tooltip("ข้อความเมื่อ ทำพิธีเสร็จแล้ว")]
         [TextArea(2, 4)]
-        [SerializeField] private string _ritualCompleteText = "พิธีกรรมเสร็จสิ้นแล้ว... ฉันออกไปจากที่นี่ได้แล้ว!";
+        [SerializeField] private string _ritualCompleteText = "พิธีกรรมเสร็จสิ้นแล้ว... ออกไปได้แล้ว!";
 
-        [Tooltip("ข้อความเมื่อ ยังทำพิธีไม่เสร็จ")]
         [TextArea(2, 4)]
-        [SerializeField] private string _ritualIncompleteText = "ฉันยังออกไปไม่ได้... ต้องหาของทำพิธีให้ครบก่อน";
+        [SerializeField] private string _ritualIncompleteText = "ต้องหาของทำพิธีให้ครบก่อน...";
 
-        [Tooltip("ยอมให้โชว์ข้อความ ยังทำไม่เสร็จ ซ้ำได้เรื่อยๆ ไหมเวลาเดินมาชนใหม่?")]
-        [SerializeField] private bool _repeatIncomplete = true;
-
-        // ตัวแปร Static จะแชร์ข้อมูลกันทุก Trigger และจำค่าไว้ตลอดการเปิดเกม
+        // ระบบความจำ
         private static HashSet<string> _playedStories = new HashSet<string>();
-
-        // ตัวแปรกันบั๊กข้อความรัวค้างจอถ้ายืนแช่
+        private bool _hasTriggeredThisLoop = false;
         private float _lastTriggerTime = 0f;
 
         private void Start()
         {
-            // บังคับให้เป็น Trigger อัตโนมัติ
             GetComponent<BoxCollider>().isTrigger = true;
+
+            if (LoopManager.Instance != null)
+            {
+                LoopManager.Instance.Register(this);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (LoopManager.Instance != null)
+            {
+                LoopManager.Instance.Unregister(this);
+            }
+        }
+
+        // รีเซ็ตสถานะเมื่อผู้เล่นเปลี่ยนลูป
+        public void OnLoopReset(int currentLoop)
+        {
+            _hasTriggeredThisLoop = false;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -60,17 +87,19 @@ namespace SyntaxError.Story
 
         private void TriggerStory(Collider other)
         {
-            // เช็คว่ากด Start Game เพื่อเริ่มเล่นจริงๆ หรือยัง
             if (UIManager.Instance == null || !UIManager.Instance.IsGameStarted) return;
             if (!other.CompareTag("Player")) return;
 
-            // เช็คเลข Loop
-            bool isCorrectLoop = (_targetLoop == -1) ||
-                (GameManager.Instance != null && GameManager.Instance.CurrentLoop == _targetLoop);
+            // 1. เช็คดีเลย์ (ป้องกันผู้เล่นยืนแช่แล้วข้อความเด้งรัวๆ ทับกัน)
+            if (Time.time < _lastTriggerTime + _displayDuration + 0.5f) return;
 
-            if (!isCorrectLoop) return;
+            // 2. เช็คเงื่อนไข Loop ว่าล็อกไว้ไหม
+            if (!_triggerInAllLoops && GameManager.Instance != null)
+            {
+                if (GameManager.Instance.CurrentLoop != _targetLoop) return;
+            }
 
-            // แยกระบบตามที่ติ๊กตั้งค่าไว้
+            // 3. ไปแสดงผลตามโหมดที่เลือก
             if (_checkRitualStatus)
             {
                 HandleRitualStory();
@@ -83,13 +112,12 @@ namespace SyntaxError.Story
 
         private void HandleNormalStory()
         {
-            if (_playedStories.Contains(_storyID)) return;
+            if (!CanPlayStory(_storyID)) return;
 
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowStoryText(_storyText, _displayDuration);
-                _playedStories.Add(_storyID);
-                Debug.Log($"[StorySystem] เล่นเนื้อเรื่องแล้ว: {_storyID}");
+                RecordStoryPlayed(_storyID);
             }
         }
 
@@ -98,44 +126,43 @@ namespace SyntaxError.Story
             if (GameManager.Instance == null) return;
 
             bool isComplete = GameManager.Instance.IsRitualComplete;
-
-            // สร้าง ID แยกสำหรับตอนเสร็จและยังไม่เสร็จ (กันมันจำปนกัน)
             string currentID = isComplete ? _storyID + "_Complete" : _storyID + "_Incomplete";
 
-            // ถ้าเป็นข้อความที่เคยโชว์แล้ว และไม่อนุญาตให้โชว์ซ้ำ ให้ข้ามไป
-            if (_playedStories.Contains(currentID)) return;
-
-            // ป้องกันบั๊กยืนแช่ใน Trigger แล้วคิวข้อความเด้งรัวๆ 
-            if (Time.time < _lastTriggerTime + _displayDuration + 1f) return;
+            if (!CanPlayStory(currentID)) return;
 
             if (UIManager.Instance != null)
             {
                 string textToShow = isComplete ? _ritualCompleteText : _ritualIncompleteText;
                 UIManager.Instance.ShowStoryText(textToShow, _displayDuration);
-                _lastTriggerTime = Time.time;
-
-                // ถ้าทำเสร็จแล้วให้จำไว้เลย จะได้ไม่โชว์ขึ้นมาซ้ำอีก
-                if (isComplete)
-                {
-                    _playedStories.Add(currentID);
-                }
-                else
-                {
-                    // ถ้ายอมให้โชว์ Incomplete แค่ครั้งเดียว ก็บันทึกลงไป
-                    if (!_repeatIncomplete)
-                    {
-                        _playedStories.Add(currentID);
-                    }
-                }
-
-                Debug.Log($"[StorySystem] เล่นเนื้อเรื่องฉากจบ: {currentID}");
+                RecordStoryPlayed(currentID);
             }
+        }
+
+        private bool CanPlayStory(string id)
+        {
+            // ถ้าเล่นครั้งเดียวเกม แล้วเคยเล่นไปแล้ว = ห้ามเล่นอีก
+            if (_frequency == StoryFrequency.OncePerGame && _playedStories.Contains(id)) return false;
+
+            // ถ้าเล่นลูปละครั้ง แล้วลูปนี้เล่นไปแล้ว = ห้ามเล่นอีก
+            if (_frequency == StoryFrequency.OncePerLoop && _hasTriggeredThisLoop) return false;
+
+            return true; // โหมด Unlimited หรือยังไม่เคยเล่นเลย
+        }
+
+        private void RecordStoryPlayed(string id)
+        {
+            _lastTriggerTime = Time.time;
+
+            if (_frequency == StoryFrequency.OncePerGame)
+                _playedStories.Add(id);
+
+            if (_frequency == StoryFrequency.OncePerLoop)
+                _hasTriggeredThisLoop = true;
         }
 
         public static void ResetAllStoryMemory()
         {
             _playedStories.Clear();
-            Debug.Log("[StorySystem] ล้างความทรงจำเนื้อเรื่องทั้งหมดแล้ว");
         }
     }
 }
