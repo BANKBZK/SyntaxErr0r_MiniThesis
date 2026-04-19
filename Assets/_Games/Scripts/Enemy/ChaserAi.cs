@@ -3,7 +3,7 @@ using UnityEngine.AI;
 using SyntaxError.Player;
 using SyntaxError.Inputs;
 using SyntaxError.Managers;
-using SyntaxError.Interfaces; // [เพิ่ม] เพื่อเรียกใช้ IResettable
+using SyntaxError.Interfaces;
 
 namespace SyntaxError.Enemy
 {
@@ -19,7 +19,7 @@ namespace SyntaxError.Enemy
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
-    public class ChaserAI : MonoBehaviour, IResettable // [แก้ไข] เพิ่ม IResettable
+    public class ChaserAI : MonoBehaviour, IResettable
     {
         [Header("References")]
         [SerializeField] private Transform _playerTransform;
@@ -44,6 +44,7 @@ namespace SyntaxError.Enemy
         [SerializeField] private float _stalkWaitTime = 0.5f;
 
         private float _stateTimer = 0f;
+        [SerializeField] private float _stunImmunityTimer = 0f;
 
         [Header("Impatience System (หาจังหวะทีเผลอ)")]
         [SerializeField] private float _impatienceGauge = 0f;
@@ -97,7 +98,6 @@ namespace SyntaxError.Enemy
         private Vector3 _playerVelocity;
         private bool _disappearAfterScript = false;
 
-        // [เพิ่ม] ตัวแปรสำหรับจำจุดเกิดต้นฉบับ
         private Vector3 _initialPosition;
         private Quaternion _initialRotation;
 
@@ -107,11 +107,9 @@ namespace SyntaxError.Enemy
             _agent.angularSpeed = _turnSpeed;
             _agent.acceleration = _acceleration;
 
-            // [เพิ่ม] จดจำตำแหน่งแรกสุดที่นายวางผีไว้
             _initialPosition = transform.position;
             _initialRotation = transform.rotation;
 
-            // [เพิ่ม] ลงทะเบียนกับ LoopManager
             if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
 
             if (_playerTransform == null) _playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
@@ -127,41 +125,32 @@ namespace SyntaxError.Enemy
 
         private void OnDestroy()
         {
-            // [เพิ่ม] ถอนการลงทะเบียน
             if (LoopManager.Instance != null) LoopManager.Instance.Unregister(this);
         }
 
-        // ==========================================
-        // [เพิ่ม] ฟังก์ชันรีเซ็ตจาก IResettable
-        // ==========================================
         public void OnLoopReset(int currentLoop)
         {
-            // รีเซ็ตเกจและความโกรธทุกครั้งที่เปลี่ยนลูป (หรือโดนส่งกลับ)
             _impatienceGauge = 0f;
             _currentStunTime = 0f;
             _stateTimer = 0f;
+            _stunImmunityTimer = 0f;
             _lastRollResult = "Resetting AI system...";
 
-            // หยุดเพลงไล่ล่า
             if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
                 SoundManager.Instance.StopMusic(_chaseMusic);
 
-            // ถ้าเป็นการ Reset กลับ Loop 0 (ตอนตายหรือเริ่มใหม่)
             if (currentLoop == 0)
             {
-                // 1. วาร์ปกลับจุดเกิดต้นฉบับ
                 if (_agent != null)
                 {
-                    _agent.enabled = false; // ปิด NavMesh ชั่วคราวเพื่อให้วาร์ปตำแหน่งได้
+                    _agent.enabled = false;
                     transform.position = _initialPosition;
                     transform.rotation = _initialRotation;
                     _agent.enabled = true;
                 }
 
-                // 2. เปิดตัวตนกลับมา (เผื่อกรณีหายตัวไปหลังจากเล่น Scripted จบ)
                 gameObject.SetActive(true);
 
-                // 3. เซ็ตสถานะให้กลับไปเป็น Dormant หรือ Idle ตามที่ตั้งไว้
                 if (_startDormant) ChangeState(AIState.Dormant);
                 else ChangeState(AIState.Idle);
 
@@ -172,11 +161,11 @@ namespace SyntaxError.Enemy
         private void Update()
         {
             if (_playerTransform == null) return;
-
-            // ถ้าอยู่ในสถานะหลับ ไม่ต้องคำนวณอะไรทั้งสิ้น
             if (CurrentState == AIState.Dormant) return;
 
+            // อัปเดต Cooldown ต่างๆ
             if (_stalkSoundTimer > 0) _stalkSoundTimer -= Time.deltaTime;
+            if (_stunImmunityTimer > 0) _stunImmunityTimer -= Time.deltaTime;
 
             CalculatePlayerVelocity();
 
@@ -235,14 +224,13 @@ namespace SyntaxError.Enemy
 
                 case AIState.Chase:
                     _stateTimer = _maxChaseTime;
-                    // [แก้ไข] ส่งตำแหน่งผู้เล่นไปหาจุดที่เดินได้จริง
                     SafeSetDestination(_playerTransform.position);
                     if (SoundManager.Instance != null && !string.IsNullOrEmpty(_chaseMusic))
                         SoundManager.Instance.PlayMusic(_chaseMusic);
                     break;
 
                 case AIState.Flee:
-                    _stateTimer = 4.0f;
+                    _stateTimer = 4.0f; // เวลาในการวิ่งหนี
                     _currentStunTime = 0f;
                     PickFleePosition();
                     break;
@@ -267,11 +255,14 @@ namespace SyntaxError.Enemy
         private void UpdateAgentSpeed()
         {
             if (CurrentState == AIState.Scripted) return;
+
             float baseSpeed = GetBaseSpeedForState(CurrentState);
 
             if (_currentStunTime > 0 && CurrentState != AIState.Flee)
             {
-                _agent.speed = baseSpeed * _stunSlowdownMultiplier;
+                // สโลว์ผีแปรผันตามเปอร์เซ็นต์หลอด Stun 
+                float stunPercent = _currentStunTime / _timeToStun;
+                _agent.speed = Mathf.Lerp(baseSpeed, baseSpeed * _stunSlowdownMultiplier, stunPercent);
             }
             else
             {
@@ -281,22 +272,27 @@ namespace SyntaxError.Enemy
 
         private void HandleLightStunTimer(bool canSeePlayer, bool isLookingAtMe)
         {
-            if (CurrentState == AIState.Chase || CurrentState == AIState.Scripted)
+            if (CurrentState == AIState.Scripted || CurrentState == AIState.Flee)
             {
                 _currentStunTime = 0f;
-                if (CurrentState != AIState.Scripted) UpdateAgentSpeed();
+                UpdateAgentSpeed();
                 return;
             }
+
             bool isLightStrongEnough = _playerFlashlight != null && _playerFlashlight.IsLightOn && _playerFlashlight.CurrentBattery >= _minBatteryToStun;
 
-            if (isLightStrongEnough && canSeePlayer)
+            // เงื่อนไข Stun: ไฟแรงพอ + ผีไม่มีภูมิต้านทาน + ผู้เล่นต้องมองจ้องมาที่ผี
+            if (isLightStrongEnough && _stunImmunityTimer <= 0f && isLookingAtMe)
             {
                 _currentStunTime += Time.deltaTime;
+                _currentStunTime = Mathf.Clamp(_currentStunTime, 0f, _timeToStun);
                 UpdateAgentSpeed();
             }
             else
             {
-                _currentStunTime = Mathf.Max(0, _currentStunTime - (Time.deltaTime * 2f));
+                // บทลงโทษ: ถ้าส่องไม่สุดแล้วสะบัดหน้าหนีหรือไฟดับ หลอด Stun ลดไวกว่าเดิม 3 เท่า
+                _currentStunTime -= Time.deltaTime * 3f;
+                _currentStunTime = Mathf.Max(0, _currentStunTime);
                 UpdateAgentSpeed();
             }
         }
@@ -304,6 +300,8 @@ namespace SyntaxError.Enemy
         private void HandleStateMachine(float distance, bool canSee, bool canHear, bool isLookingAtMe)
         {
             if (CurrentState == AIState.Dormant) return;
+
+            // โหมดนักแสดง จะไม่สนใจกฎใดๆ จนกว่าจะจบ Scripted
             if (CurrentState == AIState.Scripted)
             {
                 if (_stateTimer > 0f) _stateTimer -= Time.deltaTime;
@@ -322,12 +320,14 @@ namespace SyntaxError.Enemy
                 return;
             }
 
+            // ถ้าโดนแสงจนหลอดเต็ม สลับไปวิ่งหนี
             if (_currentStunTime >= _timeToStun && CurrentState != AIState.Flee && CurrentState != AIState.Chase)
             {
                 ChangeState(AIState.Flee);
                 return;
             }
 
+            // ถ้าได้ยินเสียงปั่นไฟใกล้ๆ โกรธวิ่งชาร์จทันที
             if (_playerInput.IsCranking && distance <= _crankHearingRadius && CurrentState != AIState.Chase && CurrentState != AIState.Flee)
             {
                 _lastRollResult = "ได้ยินเสียงปั่นไฟฉาย! วิ่งชาร์จ!";
@@ -365,7 +365,9 @@ namespace SyntaxError.Enemy
                     break;
 
                 case AIState.Stalk:
+                    // ถ้าหลอดโกรธเต็มพิกัด พุ่งชาร์จทันที
                     if (_impatienceGauge >= _maxImpatience) { ChangeState(AIState.Chase); break; }
+
                     if (canSee && distance < 6f) { ChangeState(AIState.Chase); break; }
                     if (!canHear && !canSee && !_agent.pathPending && _agent.remainingDistance < 1f && _stateTimer <= 0f)
                     {
@@ -385,7 +387,6 @@ namespace SyntaxError.Enemy
                     break;
 
                 case AIState.Chase:
-                    // [แก้ไข] สั่งให้ AI เดินตามผู้เล่นอ้อมสิ่งกีดขวางผ่าน NavMesh
                     SafeSetDestination(_playerTransform.position);
                     _stateTimer -= Time.deltaTime;
                     if (_stateTimer <= 0f) { ChangeState(AIState.Flee); break; }
@@ -394,19 +395,37 @@ namespace SyntaxError.Enemy
 
                 case AIState.Flee:
                     _stateTimer -= Time.deltaTime;
-                    if (_stateTimer <= 0f) { _impatienceGauge = 0f; ChangeState(AIState.Idle); }
+                    if (_stateTimer <= 0f)
+                    {
+                        _impatienceGauge = 0f;
+                        // ให้ภูมิต้านทานแสง 4 วินาทีหลังวิ่งหนีเสร็จ ป้องกันการเอาไฟจี้ซ้ำ
+                        _stunImmunityTimer = 4.0f;
+                        ChangeState(AIState.Idle);
+                    }
                     break;
             }
         }
 
         private void UpdateImpatienceGauge(float distance, bool isLookingAtMe)
         {
-            if (CurrentState == AIState.Stalk && distance < 12f && !isLookingAtMe)
-                _impatienceGauge += (12f - distance) * Time.deltaTime * 4f;
-            else if (isLookingAtMe)
-                _impatienceGauge -= Time.deltaTime * 50f;
+            if (CurrentState == AIState.Stalk)
+            {
+                if (!isLookingAtMe)
+                {
+                    // ถ้าอยู่ในโหมด Stalk แล้วผู้เล่นไม่ยอมหันมามอง -> หลอดโกรธขึ้นไว
+                    _impatienceGauge += Time.deltaTime * 15f;
+                }
+                else
+                {
+                    // ถ้าหันมาเผชิญหน้า -> หลอดโกรธจะค่อยๆ ลดลงฮวบฮาบ
+                    _impatienceGauge -= Time.deltaTime * 50f;
+                }
+            }
             else
+            {
+                // ถ้าไม่ได้อยู่ในโหมด Stalk หลอดความโกรธจะคลายตัวช้าๆ
                 _impatienceGauge -= Time.deltaTime * 5f;
+            }
 
             _impatienceGauge = Mathf.Clamp(_impatienceGauge, 0f, _maxImpatience);
         }
@@ -481,14 +500,10 @@ namespace SyntaxError.Enemy
             if (!foundValidSpot) SafeSetDestination(_playerTransform.position);
         }
 
-        // ==========================================
-        // [แก้ไขใหม่] ฟังก์ชันสั่งเดินแบบปลอดภัย
-        // ==========================================
         private void SafeSetDestination(Vector3 targetPos)
         {
             if (_agent != null && _agent.isOnNavMesh)
             {
-                // ค้นหาจุดบน NavMesh ที่ใกล้กับตำแหน่งเป้าหมายที่สุดในระยะ 2 เมตร
                 NavMeshHit hit;
                 if (NavMesh.SamplePosition(targetPos, out hit, 2.0f, NavMesh.AllAreas))
                 {
@@ -496,7 +511,6 @@ namespace SyntaxError.Enemy
                 }
                 else
                 {
-                    // Fallback กรณีหาจุดใกล้ไม่เจอ ให้ลองสั่งเดินไปที่ตำแหน่งเดิม
                     _agent.SetDestination(targetPos);
                 }
             }
@@ -530,8 +544,10 @@ namespace SyntaxError.Enemy
 
         private bool CheckLineOfSight(float distanceToPlayer)
         {
+            // แสงไฟมีผลต่อระยะการมองเห็นของผี
             float currentSightRadius = (_playerFlashlight != null && _playerFlashlight.IsLightOn) ? _sightRadiusLight : _sightRadiusDark;
             if (distanceToPlayer > currentSightRadius) return false;
+
             Vector3 aiEyePos = transform.position + Vector3.up;
             Vector3 playerEyePos = _playerTransform.position + Vector3.up;
             return !Physics.Raycast(aiEyePos, (playerEyePos - aiEyePos).normalized, distanceToPlayer, _obstacleMask);
@@ -542,10 +558,13 @@ namespace SyntaxError.Enemy
             if (_playerInput == null) return false;
             float currentNoiseLevel = 0f;
             bool isMoving = _playerInput.MoveInput.magnitude > 0.1f;
+
+            // เช็คระดับความดังของเสียงจากกิจกรรมที่ผู้เล่นทำ
             if (_playerInput.IsCranking) currentNoiseLevel = Mathf.Max(currentNoiseLevel, _crankHearingRadius);
+
             if (isMoving)
             {
-                if (_playerInput.IsCrouching) currentNoiseLevel = Mathf.Max(currentNoiseLevel, 1f);
+                if (_playerInput.IsCrouching) currentNoiseLevel = Mathf.Max(currentNoiseLevel, 1f); // ย่องแทบไม่ได้ยิน
                 else if (_playerInput.IsSprinting) currentNoiseLevel = Mathf.Max(currentNoiseLevel, _sprintHearingRadius);
                 else currentNoiseLevel = Mathf.Max(currentNoiseLevel, _walkHearingRadius);
             }
@@ -555,8 +574,6 @@ namespace SyntaxError.Enemy
         private void CatchPlayer()
         {
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
-
-            // [เพิ่มโค้ดส่วนนี้] สั่งให้เกม Reset กลับไปที่ Loop 0 ทันที
             if (LoopManager.Instance != null && isEnemyCanKill)
             {
                 LoopManager.Instance.FullGameReset();

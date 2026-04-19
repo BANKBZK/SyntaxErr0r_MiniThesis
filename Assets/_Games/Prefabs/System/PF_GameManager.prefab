@@ -74,7 +74,7 @@ MonoBehaviour:
   _ritualLoopTrigger: 4
   _fadeUI: {fileID: 0}
   _fadeDuration: 1
-  _finalLoopTrigger: 8
+  _finalLoopTrigger: 9
   trueEndingScene: 1
   falseEndingScene: 2
 --- !u!114 &1388815034223945503
@@ -92,35 +92,6 @@ MonoBehaviour:
   _chance: 100
   _safeLoops: 0000000004000000
   _allAnomalies:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
   _availableAnomalies: []
 --- !u!114 &2975407796540419083
@@ -300,6 +271,13 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 31a7e60dd3ef4e74dbb63eed235832df, type: 3}
     volume: 0.77
     pitch: 1
+    loop: 0
+    source: {fileID: 0}
+  - name: ChaseTheme
+    type: 3
+    clip: {fileID: 8300000, guid: 3a90328728ca0794ebda6eafce3ec2a0, type: 3}
+    volume: 0.77
+    pitch: 2
     loop: 0
     source: {fileID: 0}
 --- !u!114 &1010481440243996040

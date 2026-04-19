@@ -1,24 +1,24 @@
 ﻿using UnityEngine;
 using SyntaxError.Enemy;
 using SyntaxError.Managers;
-using SyntaxError.Interfaces; // [เพิ่ม] เพื่อเรียกใช้ IResettable
+using SyntaxError.Interfaces;
 
 namespace SyntaxError.Interaction
 {
-    public class EnemyEventTrigger : MonoBehaviour, IResettable // [แก้ไข] เพิ่ม IResettable
+    public class EnemyEventTrigger : MonoBehaviour, IResettable
     {
         public enum ZoneAction
         {
-            WakeUpAndHunt,           // ให้ผีตื่นแล้วเริ่มล่าทันที (เริ่มที่ Idle)
-            CinematicThenHunt,       // ให้ผีเดินผ่านหน้า แล้วจากนั้นค่อยสลับมาล่าเรา
-            CinematicThenDisappear   // ให้ผีเดินผ่านหน้า แล้วหายตัวไปเลย
+            WakeUpAndHunt,           // ให้ผีตื่นแล้วเริ่มล่าทันที (เริ่มที่ Idle แล้วระบบจะรันเอง)
+            CinematicThenHunt,       // ให้ผีเดินผ่านหน้ากล้อง แล้วจากนั้นค่อยสลับมาล่าเรา
+            CinematicThenDisappear   // ให้ผีเดินผ่านหน้ากล้องหลอนๆ แล้วหายตัวไปเลย
         }
 
         [Header("Trigger Settings")]
         [Tooltip("พอเหยียบแล้ว จะให้ผีทำอะไร?")]
         [SerializeField] private ZoneAction _action = ZoneAction.CinematicThenHunt;
 
-        [Tooltip("ลากตัวผีในฉากมาใส่ (ตอนเริ่มเกมควรปิดตาผีตัวนี้ไว้ใน Hierarchy)")]
+        [Tooltip("ลากตัวผีในฉากมาใส่ (ตอนเริ่มเกมควรตั้งค่าที่ตัวผีเป็น Start Dormant)")]
         [SerializeField] private ChaserAI _ghostAI;
 
         [Header("Cinematic Settings (สำหรับโหมด Cinematic)")]
@@ -34,9 +34,6 @@ namespace SyntaxError.Interaction
 
         private bool _hasTriggered = false;
 
-        // ==========================================
-        // [เพิ่ม] ระบบลงทะเบียนกับ LoopManager
-        // ==========================================
         private void Start()
         {
             if (LoopManager.Instance != null)
@@ -53,9 +50,6 @@ namespace SyntaxError.Interaction
             }
         }
 
-        // ==========================================
-        // [เพิ่ม] ฟังก์ชันรีเซ็ตสถานะทริกเกอร์
-        // ==========================================
         public void OnLoopReset(int currentLoop)
         {
             // เมื่อ Reset กลับมาที่ Loop 0 ให้สามารถเหยียบ Trigger นี้ได้อีกครั้ง
@@ -71,7 +65,7 @@ namespace SyntaxError.Interaction
 
             if (_ghostAI != null)
             {
-                // เปิด Object (ถ้ามันปิดอยู่)
+                // เปิด Object ผี (เผื่อโดนปิดไว้)
                 _ghostAI.gameObject.SetActive(true);
 
                 if (_action == ZoneAction.CinematicThenHunt)
@@ -84,7 +78,7 @@ namespace SyntaxError.Interaction
                 }
                 else if (_action == ZoneAction.WakeUpAndHunt)
                 {
-                    // ใช้ฟังก์ชัน WakeUp ปลุก AI ขึ้นมา
+                    // ใช้ฟังก์ชัน WakeUp ปลุก AI ขึ้นมาแล้วเริ่มลูปหาผู้เล่น
                     Vector3? targetPos = _spawnPoint != null ? _spawnPoint.position : (Vector3?)null;
                     _ghostAI.WakeUp(targetPos);
                 }
@@ -98,7 +92,7 @@ namespace SyntaxError.Interaction
 
         private void OnDrawGizmos()
         {
-            Gizmos.color = new Color(1f, 0f, 0f, 0.3f); // สีแดงโปร่งแสงจะได้เห็นง่าย
+            Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
             if (GetComponent<BoxCollider>() != null)
             {
                 Gizmos.matrix = transform.localToWorldMatrix;
