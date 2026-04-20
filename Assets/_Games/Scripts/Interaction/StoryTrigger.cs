@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using SyntaxError.Managers;
-using SyntaxError.Interfaces; // เพิ่ม IResettable เพื่อให้รับรู้ตอนวาร์ปเปลี่ยนลูป
+using SyntaxError.Interfaces;
 
 namespace SyntaxError.Story
 {
@@ -10,104 +10,89 @@ namespace SyntaxError.Story
     {
         public enum StoryFrequency
         {
-            OncePerGame,   // โชว์ครั้งเดียวตลอดทั้งเกม (สำหรับเนื้อเรื่องหลัก)
-            OncePerLoop,   // โชว์ลูปละ 1 ครั้ง (พอวาร์ปขึ้นลูปใหม่ จะกลับมาเดินเหยียบซ้ำได้)
-            Unlimited      // โชว์ทุกครั้งที่เดินมาชน! (มีระบบดีเลย์กันข้อความเด้งรัว)
+            OncePerGame,
+            OncePerLoop,
+            Unlimited
         }
 
         [Header("Story Identification")]
-        [Tooltip("ตั้งชื่อ ID ให้ไม่ซ้ำกัน เช่น 'Tut_Move', 'Door_Locked'")]
         [SerializeField] private string _storyID = "Story_01";
 
-        [Header("Story Settings (เนื้อเรื่องปกติ)")]
+        [Header("Story Settings")]
         [TextArea(3, 5)]
         [SerializeField] private string _storyText = "พิมพ์เนื้อเรื่องตรงนี้...";
-
-        [Tooltip("ความถี่ในการแสดงข้อความนี้")]
         [SerializeField] private StoryFrequency _frequency = StoryFrequency.OncePerGame;
-
-        [Tooltip("ระยะเวลาที่ข้อความค้างอยู่บนจอ (วินาที)")]
         [SerializeField] private float _displayDuration = 4f;
 
-        [Header("Loop Conditions (เงื่อนไขการโชว์)")]
-        [Tooltip("ให้ข้อความนี้โชว์ในทุกๆ ลูปเลยหรือไม่? (ติ๊กถูก = โชว์ทุกลูป)")]
+        [Header("Loop Conditions")]
         [SerializeField] private bool _triggerInAllLoops = true;
-
-        [Tooltip("ถ้าไม่ได้ติ๊กทุกลูป จะให้โชว์เฉพาะที่ Loop ไหน?")]
         [SerializeField] private int _targetLoop = 0;
 
-        [Header("Ending / Ritual Conditions (เช็คฉากจบ)")]
-        [Tooltip("เปิดใช้งานเพื่อเช็คว่าทำพิธีเสร็จหรือยัง (จะข้ามข้อความปกติไปเลย)")]
+        [Header("Ending / Ritual Conditions")]
         [SerializeField] private bool _checkRitualStatus = false;
-
         [TextArea(2, 4)]
         [SerializeField] private string _ritualCompleteText = "พิธีกรรมเสร็จสิ้นแล้ว... ออกไปได้แล้ว!";
-
         [TextArea(2, 4)]
         [SerializeField] private string _ritualIncompleteText = "ต้องหาของทำพิธีให้ครบก่อน...";
 
-        // ระบบความจำ
         private static HashSet<string> _playedStories = new HashSet<string>();
         private bool _hasTriggeredThisLoop = false;
         private float _lastTriggerTime = 0f;
 
+        // 🛠️ ตัวแปรใหม่: จำว่าผู้เล่นยืนอยู่ในกล่องหรือเปล่า
+        private bool _isPlayerInside = false;
+
         private void Start()
         {
             GetComponent<BoxCollider>().isTrigger = true;
-
-            if (LoopManager.Instance != null)
-            {
-                LoopManager.Instance.Register(this);
-            }
+            if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
         }
 
         private void OnDestroy()
         {
-            if (LoopManager.Instance != null)
-            {
-                LoopManager.Instance.Unregister(this);
-            }
+            if (LoopManager.Instance != null) LoopManager.Instance.Unregister(this);
         }
 
-        // รีเซ็ตสถานะเมื่อผู้เล่นเปลี่ยนลูป
         public void OnLoopReset(int currentLoop)
         {
             _hasTriggeredThisLoop = false;
         }
 
+        // 🛠️ แก้ไข: แค่จำว่าผู้เล่นเดินเข้ามาแล้ว
         private void OnTriggerEnter(Collider other)
         {
-            TriggerStory(other);
+            if (other.CompareTag("Player")) _isPlayerInside = true;
         }
 
-        private void OnTriggerStay(Collider other)
+        // 🛠️ แก้ไข: จำว่าผู้เล่นเดินออกไปแล้ว
+        private void OnTriggerExit(Collider other)
         {
-            TriggerStory(other);
+            if (other.CompareTag("Player")) _isPlayerInside = false;
         }
 
-        private void TriggerStory(Collider other)
+        // 🛠️ แก้ไข: ให้ Update คอยเช็คตลอดเวลา ถ้าเกมเริ่มแล้วและคนยังอยู่ข้างใน ก็โชว์เลย!
+        private void Update()
         {
+            if (_isPlayerInside)
+            {
+                TriggerStory();
+            }
+        }
+
+        private void TriggerStory()
+        {
+            // ถ้าเกมยังไม่เริ่ม ให้รอก่อน (Update จะวนมาเช็คใหม่เรื่อยๆ)
             if (UIManager.Instance == null || !UIManager.Instance.IsGameStarted) return;
-            if (!other.CompareTag("Player")) return;
 
-            // 1. เช็คดีเลย์ (ป้องกันผู้เล่นยืนแช่แล้วข้อความเด้งรัวๆ ทับกัน)
             if (Time.time < _lastTriggerTime + _displayDuration + 0.5f) return;
 
-            // 2. เช็คเงื่อนไข Loop ว่าล็อกไว้ไหม
             if (!_triggerInAllLoops && GameManager.Instance != null)
             {
                 if (GameManager.Instance.CurrentLoop != _targetLoop) return;
             }
 
-            // 3. ไปแสดงผลตามโหมดที่เลือก
-            if (_checkRitualStatus)
-            {
-                HandleRitualStory();
-            }
-            else
-            {
-                HandleNormalStory();
-            }
+            if (_checkRitualStatus) HandleRitualStory();
+            else HandleNormalStory();
         }
 
         private void HandleNormalStory()
@@ -140,24 +125,16 @@ namespace SyntaxError.Story
 
         private bool CanPlayStory(string id)
         {
-            // ถ้าเล่นครั้งเดียวเกม แล้วเคยเล่นไปแล้ว = ห้ามเล่นอีก
             if (_frequency == StoryFrequency.OncePerGame && _playedStories.Contains(id)) return false;
-
-            // ถ้าเล่นลูปละครั้ง แล้วลูปนี้เล่นไปแล้ว = ห้ามเล่นอีก
             if (_frequency == StoryFrequency.OncePerLoop && _hasTriggeredThisLoop) return false;
-
-            return true; // โหมด Unlimited หรือยังไม่เคยเล่นเลย
+            return true;
         }
 
         private void RecordStoryPlayed(string id)
         {
             _lastTriggerTime = Time.time;
-
-            if (_frequency == StoryFrequency.OncePerGame)
-                _playedStories.Add(id);
-
-            if (_frequency == StoryFrequency.OncePerLoop)
-                _hasTriggeredThisLoop = true;
+            if (_frequency == StoryFrequency.OncePerGame) _playedStories.Add(id);
+            if (_frequency == StoryFrequency.OncePerLoop) _hasTriggeredThisLoop = true;
         }
 
         public static void ResetAllStoryMemory()
