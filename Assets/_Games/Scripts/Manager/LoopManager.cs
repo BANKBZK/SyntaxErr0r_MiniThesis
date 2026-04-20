@@ -54,14 +54,6 @@ namespace SyntaxError.Managers
         public void FullGameReset()
         {
             if (_isTeleporting) return;
-
-            // 1. ล้างความทรงจำเนื้อเรื่องทั้งหมด (เพื่อให้เนื้อเรื่องเริ่มใหม่)
-            StoryTrigger.ResetAllStoryMemory();
-
-            // *** เอา AnomalyManager.Instance.ResetAnomalyPool() ออกจากตรงนี้ ***
-            // เพื่อให้มันจำว่าเคยสุ่มอะไรไปแล้ว ผู้เล่นจะได้เจอของใหม่ๆ ต่อไป
-
-            // 2. สั่งเริ่มลำดับการวาร์ปโดยส่งค่า false (เพื่อเตะกลับไป Loop 0)
             StartCoroutine(TeleportSequence(false));
         }
 

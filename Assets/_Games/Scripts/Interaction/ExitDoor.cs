@@ -22,10 +22,22 @@ namespace SyntaxError.Interaction
 
         private bool _isClicked = false;
         private Vector3 _initialPos;
+        private bool _isInitialized = false; // 🛠️ ตัวแปรเช็คว่าจำตำแหน่งหรือยัง
 
-        private void Start()
+        // 🛠️ เปลี่ยนจาก Start เป็น Awake เพื่อให้รันทันทีที่ Object ถูกเปิด
+        private void Awake()
         {
-            if (_doorModel != null) _initialPos = _doorModel.localPosition;
+            InitializeDoor();
+        }
+
+        // 🛠️ ฟังก์ชันสำหรับบังคับจำตำแหน่ง
+        private void InitializeDoor()
+        {
+            if (!_isInitialized && _doorModel != null)
+            {
+                _initialPos = _doorModel.localPosition;
+                _isInitialized = true;
+            }
         }
 
         public void Interact()
@@ -49,13 +61,8 @@ namespace SyntaxError.Interaction
             if (_isClicked || (LoopManager.Instance != null && LoopManager.Instance.IsTeleporting))
                 return "";
 
-            // ถ้ามีข้อความ Custom ให้โชว์ข้อความ Custom
-            if (!string.IsNullOrEmpty(_customPromptText))
-            {
-                return _customPromptText;
-            }
+            if (!string.IsNullOrEmpty(_customPromptText)) return _customPromptText;
 
-            // ถ้าไม่ได้พิมพ์อะไรไว้ ให้ใช้ข้อความ Default
             return _isAnomalyExit ? "Report Anomaly" : "Proceed Normal";
         }
 
@@ -87,6 +94,7 @@ namespace SyntaxError.Interaction
 
         public void ResetDoor()
         {
+            InitializeDoor(); // 🛠️ บังคับเช็คตำแหน่งให้ชัวร์ก่อนรีเซ็ต
             _isClicked = false;
             if (_doorModel != null) _doorModel.localPosition = _initialPos;
         }

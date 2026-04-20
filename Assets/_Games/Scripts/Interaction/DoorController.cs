@@ -15,26 +15,37 @@ namespace SyntaxError.Interaction
         private Vector3 _openPos;
         private bool _isOpen = false;
         private Coroutine _animRoutine;
+        private bool _isInitialized = false;
+
+        private void Awake()
+        {
+            InitializeDoor();
+        }
+
+        private void InitializeDoor()
+        {
+            if (!_isInitialized)
+            {
+                if (_doorModel == null) _doorModel = transform;
+                _closedPos = _doorModel.localPosition;
+                _openPos = _closedPos + _moveOffset;
+                _isInitialized = true;
+            }
+        }
 
         private void Start()
         {
-            if (_doorModel == null) _doorModel = transform;
-            _closedPos = _doorModel.localPosition;
-            _openPos = _closedPos + _moveOffset;
-
-            // ลงทะเบียนกับ LoopManager ทันทีที่เกิด
-            LoopManager.Instance.Register(this);
+            if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
         }
 
         private void OnDestroy()
         {
-            // อย่าลืมถอนชื่อออกถ้าถูกทำลาย
             if (LoopManager.Instance != null) LoopManager.Instance.Unregister(this);
         }
 
-        // --- ส่วน Interact (กดเปิด/ปิด) ---
         public void Interact()
         {
+            InitializeDoor(); // กันเหนียว
             _isOpen = !_isOpen;
             if (_animRoutine != null) StopCoroutine(_animRoutine);
             _animRoutine = StartCoroutine(MoveDoor(_isOpen ? _openPos : _closedPos));
@@ -45,14 +56,11 @@ namespace SyntaxError.Interaction
             return _isOpen ? "Close Door" : "Open Door";
         }
 
-        // --- ส่วน Reset (IResettable) ---
-        // ฟังก์ชันนี้จะถูกเรียกโดย LoopManager ตอนจอดำ
         public void OnLoopReset(int currentLoop)
         {
-            // หยุด Animation ที่ค้างอยู่
+            InitializeDoor(); // 🛠️ บังคับเช็คตำแหน่งก่อนรีเซ็ต
             if (_animRoutine != null) StopCoroutine(_animRoutine);
 
-            // บังคับปิดทันที (ไม่ต้องมี Animation)
             _isOpen = false;
             _doorModel.localPosition = _closedPos;
         }

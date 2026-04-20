@@ -8,23 +8,16 @@ namespace SyntaxError.Events
     public class StoryObject : MonoBehaviour, IResettable
     {
         [Header("Story Object ID")]
-        [Tooltip("ตั้งชื่อ ID ให้ไม่ซ้ำกัน เพื่อให้เกมจำได้ (เช่น 'GhostPiano_01')")]
         [SerializeField] private string _storyObjectID = "Obj_01";
 
         [Header("Condition")]
-        [Tooltip("จะให้โผล่มาใน Loop ที่เท่าไหร่?")]
         [SerializeField] private int _targetLoop = 3;
-
-        [Tooltip("ถ้าติ๊กถูก จะโผล่แค่ Loop นี้ Loop เดียวแล้วหายไปเลย")]
         [SerializeField] private bool _onlyThisLoop = true;
-
-        [Tooltip("ถ้าติ๊กถูก โผล่มาแล้ว ครั้งหน้าถ้าตายกลับมา Loop 0 จะไม่โผล่ซ้ำอีก")]
         [SerializeField] private bool _showOnlyOncePerGame = true;
 
         [Header("Object To Control")]
         [SerializeField] private GameObject _contentObject;
 
-        // หน่วยความจำที่จดจำว่า Object ID ไหนเคยโผล่มาแล้วบ้าง
         private static HashSet<string> _triggeredObjects = new HashSet<string>();
 
         private void Start()
@@ -42,7 +35,7 @@ namespace SyntaxError.Events
         {
             if (_contentObject == null) return;
 
-            // เช็คความทรงจำ: ถ้าตั้งให้โผล่ครั้งเดียว และเคยโผล่ไปแล้ว ให้ปิดทิ้งถาวรเลย
+            // เช็คความจำ: ถ้าตั้งให้โผล่ครั้งเดียว (OncePerGame) และเคยโผล่ไปแล้ว ให้ปิดทิ้งเลย
             if (_showOnlyOncePerGame && _triggeredObjects.Contains(_storyObjectID))
             {
                 _contentObject.SetActive(false);
@@ -51,29 +44,20 @@ namespace SyntaxError.Events
 
             bool shouldAppear = false;
 
-            if (_onlyThisLoop)
-            {
-                shouldAppear = (currentLoop == _targetLoop);
-            }
-            else
-            {
-                shouldAppear = (currentLoop >= _targetLoop);
-            }
+            if (_onlyThisLoop) shouldAppear = (currentLoop == _targetLoop);
+            else shouldAppear = (currentLoop >= _targetLoop);
 
             _contentObject.SetActive(shouldAppear);
 
-            // ถ้าอีเวนต์นี้ถูกเรียกขึ้นมาแล้ว ให้จดลงหน่วยความจำ
-            if (shouldAppear)
+            // ถ้าโชว์แล้วให้จดลงหน่วยความจำ
+            if (shouldAppear && _showOnlyOncePerGame)
             {
-                if (_showOnlyOncePerGame)
-                {
-                    _triggeredObjects.Add(_storyObjectID);
-                }
-                Debug.Log($"Story Event Triggered: {gameObject.name} in Loop {currentLoop}");
+                _triggeredObjects.Add(_storyObjectID);
+                Debug.Log($"[StoryObject] {gameObject.name} โผล่แล้ว และจะถูกจำไว้ไม่ให้โผล่ซ้ำ!");
             }
         }
 
-        // เอาไว้ล้างความจำตอนผู้เล่นกดกลับ Main Menu
+        // ล้างความจำ (จะถูกเรียกตอนกลับหน้า Main Menu เท่านั้น)
         public static void ResetAllObjectMemory()
         {
             _triggeredObjects.Clear();

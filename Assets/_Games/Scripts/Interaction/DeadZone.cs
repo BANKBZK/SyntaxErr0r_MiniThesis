@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using SyntaxError.Managers;
+using SyntaxError.Interfaces; // 🛠️ 1. เพิ่มการเรียกใช้ Interface
 
-public class DeadZone : MonoBehaviour
+// 🛠️ 2. ใส่ , IResettable ต่อท้าย
+public class DeadZone : MonoBehaviour, IResettable
 {
     [Header("Ending Settings")]
     [Tooltip("เวลาที่ปล่อยให้ผีจ้องหน้า (วินาที) ก่อนจะโดนส่งกลับไป Loop 0")]
@@ -9,6 +11,25 @@ public class DeadZone : MonoBehaviour
 
     private float currentTime = 0f;
     private bool isPlayerInZone = false;
+
+    // 🛠️ 3. ลงทะเบียนตัวเองกับระบบเวลาเริ่มเกม
+    private void Start()
+    {
+        if (LoopManager.Instance != null) LoopManager.Instance.Register(this);
+    }
+
+    private void OnDestroy()
+    {
+        if (LoopManager.Instance != null) LoopManager.Instance.Unregister(this);
+    }
+
+    // 🛠️ 4. ฟังก์ชันลบล้างความจำตอนเริ่มลูป 0 ใหม่
+    public void OnLoopReset(int currentLoop)
+    {
+        currentTime = 0f;
+        isPlayerInZone = false;
+        Debug.Log("[DeadZone] ล้างสถานะอันตรายเรียบร้อย!");
+    }
 
     private void Update()
     {
@@ -20,7 +41,6 @@ public class DeadZone : MonoBehaviour
                 currentTime = 0f;
                 isPlayerInZone = false;
 
-                // [Updated] เรียกใช้ Soft Reset แทนการโหลด Scene ใหม่
                 if (LoopManager.Instance != null)
                 {
                     LoopManager.Instance.FullGameReset();

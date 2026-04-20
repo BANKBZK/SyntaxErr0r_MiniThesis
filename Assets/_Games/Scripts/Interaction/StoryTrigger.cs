@@ -10,9 +10,9 @@ namespace SyntaxError.Story
     {
         public enum StoryFrequency
         {
-            OncePerGame,
-            OncePerLoop,
-            Unlimited
+            OncePerGame,   // ขึ้นครั้งเดียวตลอดเกม (ข้ามการตาย) จนกว่าจะกลับหน้าเมนู
+            OncePerLoop,   // ขึ้น 1 ครั้ง ต่อ 1 ลูป
+            Unlimited      // ขึ้นทุกครั้งที่เดินชน
         }
 
         [Header("Story Identification")]
@@ -35,11 +35,11 @@ namespace SyntaxError.Story
         [TextArea(2, 4)]
         [SerializeField] private string _ritualIncompleteText = "ต้องหาของทำพิธีให้ครบก่อน...";
 
+        // Static จำค่าตลอดการเล่นข้ามฉาก/ข้ามการตาย
         private static HashSet<string> _playedStories = new HashSet<string>();
+
         private bool _hasTriggeredThisLoop = false;
         private float _lastTriggerTime = 0f;
-
-        // 🛠️ ตัวแปรใหม่: จำว่าผู้เล่นยืนอยู่ในกล่องหรือเปล่า
         private bool _isPlayerInside = false;
 
         private void Start()
@@ -56,23 +56,20 @@ namespace SyntaxError.Story
         public void OnLoopReset(int currentLoop)
         {
             _hasTriggeredThisLoop = false;
+            _isPlayerInside = false; // ล้างค่าเผื่อตอนโดนวาร์ปแล้วตัวผู้เล่นค้างในกล่อง
         }
 
-        // 🛠️ แก้ไข: แค่จำว่าผู้เล่นเดินเข้ามาแล้ว
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.CompareTag("Player")) _isPlayerInside = true;
-        }
+        // ใช้ทั้ง Enter และ Stay เพื่อกันบั๊กเกิดมาทับกล่องตอนโหลดเกม
+        private void OnTriggerEnter(Collider other) { if (other.CompareTag("Player")) _isPlayerInside = true; }
+        private void OnTriggerStay(Collider other) { if (other.CompareTag("Player")) _isPlayerInside = true; }
+        private void OnTriggerExit(Collider other) { if (other.CompareTag("Player")) _isPlayerInside = false; }
 
-        // 🛠️ แก้ไข: จำว่าผู้เล่นเดินออกไปแล้ว
-        private void OnTriggerExit(Collider other)
-        {
-            if (other.CompareTag("Player")) _isPlayerInside = false;
-        }
-
-        // 🛠️ แก้ไข: ให้ Update คอยเช็คตลอดเวลา ถ้าเกมเริ่มแล้วและคนยังอยู่ข้างใน ก็โชว์เลย!
         private void Update()
         {
+            // ถ้าเกมยังไม่เริ่ม หรือ กำลังวาร์ปจอดำอยู่ ห้ามรันเนื้อเรื่องเด็ดขาด
+            if (UIManager.Instance == null || !UIManager.Instance.IsGameStarted) return;
+            if (LoopManager.Instance != null && LoopManager.Instance.IsTeleporting) return;
+
             if (_isPlayerInside)
             {
                 TriggerStory();
@@ -81,9 +78,6 @@ namespace SyntaxError.Story
 
         private void TriggerStory()
         {
-            // ถ้าเกมยังไม่เริ่ม ให้รอก่อน (Update จะวนมาเช็คใหม่เรื่อยๆ)
-            if (UIManager.Instance == null || !UIManager.Instance.IsGameStarted) return;
-
             if (Time.time < _lastTriggerTime + _displayDuration + 0.5f) return;
 
             if (!_triggerInAllLoops && GameManager.Instance != null)

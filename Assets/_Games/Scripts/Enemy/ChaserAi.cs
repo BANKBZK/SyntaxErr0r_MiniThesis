@@ -574,6 +574,12 @@ namespace SyntaxError.Enemy
         private void CatchPlayer()
         {
             Debug.Log("<color=red>YOU DIED! โดนจับได้แล้ว!</color>");
+            if (_agent != null && _agent.isOnNavMesh)
+            {
+                _agent.isStopped = true;
+            }
+            ChangeState(AIState.Idle);
+
             if (LoopManager.Instance != null && isEnemyCanKill)
             {
                 LoopManager.Instance.FullGameReset();

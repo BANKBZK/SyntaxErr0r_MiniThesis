@@ -430,6 +430,7 @@ namespace SyntaxError.Managers
 
             Time.timeScale = 1f;
             StoryTrigger.ResetAllStoryMemory();
+            SyntaxError.Events.StoryObject.ResetAllObjectMemory();
 
             GameObject managersObj = GameObject.Find("--- MANAGERS ---");
             if (managersObj != null)
